@@ -1,0 +1,6 @@
+artifacts/*.cdl
+artifacts/*.dbg
+artifacts/*.nes
+artifacts/*.nes.ram.nl
+artifacts/*.o
+src/*.o

@@ -1,6 +1,6 @@
 # vapor
 
-This is the result of following along with the (https://famicom.party/book/)[Famicom Part book].
+This is the result of following along with the [Famicom Party book](https://famicom.party/book/).
 
 ## Build
 

@@ -64,22 +64,39 @@ get_button_states:
     LDA pad1
     AND #BTN_LEFT
     BEQ check_right
+    LDA player_x
+    CMP #$0a        ; are we at the left boundary?
+    BEQ check_right
     DEC player_x
+    
 check_right:
     LDA pad1
     AND #BTN_RIGHT
     BEQ check_up
+    LDA player_x
+    CMP #$f0        ; are we at the right boundary?
+    BEQ check_up
     INC player_x
+
 check_up:
     LDA pad1
     AND #BTN_UP
     BEQ check_down
+    LDA player_y
+    CMP #$0a        ; are we at the top boundary?
+    BEQ check_down
     DEC player_y
+
 check_down:
     LDA pad1
     AND #BTN_DOWN
     BEQ done_checking
+    LDA player_y
+    CMP #$df        ; are we at the bottom boundary?
+    BEQ done_checking
     INC player_y
+
+
 done_checking:
     PLA
     TAY

@@ -33,20 +33,9 @@ clear_oam:
     LDA #$a0
     STA player_y
 
-    LDA #$00
-    STA player_dir
-
-    LDX #$00
-    LDA #$00
-    STA enemy_y,x
-    INX
-    STA enemy_y,x
-    INX
-    STA enemy_y,x
-
     JMP main
 .endproc
 
 .segment "ZEROPAGE"
-.importzp player_x, player_y, player_dir
+.importzp player_x, player_y
 .importzp enemy_x, enemy_y

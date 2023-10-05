@@ -10,6 +10,7 @@
 .import update_player
 .import draw_enemy
 .import update_enemy
+.import spawn_enemy_pool
 
 .proc nmi_handler
     LDA #$00
@@ -19,8 +20,26 @@
 
     JSR update_player
     JSR draw_player
+
+; Do we need to spawn a new pool of enemies?
+    LDX #00
+loop:
+    LDY enemy_state,x       ; get the state
+    TYA
+    AND #STATE_ENEMY_ALIVE  ; check if it's alive
+    TAY
+    INX
+    CPX #$03
+    BNE loop
+    TYA
+    AND #STATE_ENEMY_ALIVE  ; one extra AND to trip processor flags
+    BNE enemy_seq
+respawn:
+    JSR spawn_enemy_pool
+enemy_seq:
     JSR update_enemy
     JSR draw_enemy
+
 
     LDA #$00
     STA $2005
@@ -57,14 +76,14 @@ load_sprite_palettes:
     CPX #$10
     BNE load_sprite_palettes
 
-    ; load sprites from memory
-    LDX #$00
-load_sprites:
-    LDA sprites,X
-    STA $0200,X
-    INX
-    CPX #$10
-    BNE load_sprites
+;     ; load sprites from memory
+;     LDX #$00
+; load_sprites:
+;     LDA sprites,X
+;     STA $0200,X
+;     INX
+;     CPX #$10
+;     BNE load_sprites
 
     ; load background elements
     LDY #$00            ; index            
@@ -120,6 +139,8 @@ load_bg_little_stars:
     INY
     BNE load_bg_little_stars
 
+    JSR spawn_enemy_pool
+
 forever:
     JMP forever
 .endproc
@@ -171,5 +192,5 @@ bg_little_stars:
 .segment "ZEROPAGE"
 player_x: .res 1
 player_y: .res 1
-player_dir: .res 1
-.exportzp player_x, player_y, player_dir
+.exportzp player_x, player_y
+.importzp enemy_state

@@ -122,4 +122,4 @@ done_checking:
 
 .segment "ZEROPAGE"
 pad1: .res 1
-.importzp player_x, player_y, player_dir
+.importzp player_x, player_y

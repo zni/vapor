@@ -140,12 +140,25 @@ despawn_y:
     JMP cont_y
 
 init_x:
-;    LDX #$00
-; update_x:
-;     INC enemy_x,x
-;     INX
-;     CPX #MAX_ENEMY_POOL_SIZE
-;     BNE update_x
+    LDX #$00
+@update_x:
+    LDA enemy_x,x       ; load enemy's x-coord
+    CMP #$ff            ; is the enemy dead (hidden)?
+    BEQ @done_x         ; then move on
+    LDA player_x        ; load player's x-coord
+    CMP enemy_x,x       ; where are we in relation?
+    BCS @inc_x          ; if the player's x-coord is greater, increment
+    BNE @dec_x          ; if ours is greater, decrement
+    BEQ @done_x         ; otherwise, we're right on track
+@inc_x:
+    INC enemy_x,x
+    JMP @done_x
+@dec_x:
+    DEC enemy_x,x
+@done_x:
+    INX
+    CPX #MAX_ENEMY_POOL_SIZE
+    BNE @update_x
 
     PLA
     TAY
@@ -165,3 +178,4 @@ enemy_state: .res MAX_ENEMY_POOL_SIZE
 ;                       |___ Alive
 enemy_offset: .res 1
 .exportzp enemy_x, enemy_y, enemy_state
+.importzp player_x, player_y

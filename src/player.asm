@@ -62,6 +62,15 @@ get_button_states:
     BCC get_button_states
 ;;;; end get input
 
+    LDA pad1
+    EOR #%11111111
+    AND last_frame_pad1
+    STA released_pad1
+    LDA last_frame_pad1
+    EOR #%11111111
+    AND pad1
+    STA pressed_pad1
+
 ;;;; check button presses
     LDA pad1
     AND #BTN_LEFT
@@ -99,13 +108,15 @@ check_down:
     INC player_y
 
 check_a:
-    LDA pad1
+    LDA pressed_pad1
     AND #BTN_A
     BEQ done_checking
     JSR spawn_player_bullet
 
 
 done_checking:
+    LDA pad1
+    STA last_frame_pad1
     PLA
     TAY
     PLA
@@ -122,4 +133,8 @@ done_checking:
 
 .segment "ZEROPAGE"
 pad1: .res 1
+last_frame_pad1: .res 1
+released_pad1: .res 1
+pressed_pad1: .res 1
 .importzp player_x, player_y
+.exportzp last_frame_pad1

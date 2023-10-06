@@ -33,8 +33,11 @@ clear_oam:
     LDA #$a0
     STA player_y
 
+    LDA #$00
+    STA last_frame_pad1
+
     JMP main
 .endproc
 
 .segment "ZEROPAGE"
-.importzp player_x, player_y
+.importzp player_x, player_y, last_frame_pad1

@@ -1,5 +1,7 @@
 .include "constants.inc"
 
+.import spawn_player_bullet
+
 .segment "CODE"
 .export draw_player
 .proc draw_player
@@ -90,11 +92,17 @@ check_up:
 check_down:
     LDA pad1
     AND #BTN_DOWN
-    BEQ done_checking
+    BEQ check_a
     LDA player_y
     CMP #$df        ; are we at the bottom boundary?
-    BEQ done_checking
+    BEQ check_a
     INC player_y
+
+check_a:
+    LDA pad1
+    AND #BTN_A
+    BEQ done_checking
+    JSR spawn_player_bullet
 
 
 done_checking:
@@ -106,6 +114,11 @@ done_checking:
     PLP
     RTS
 .endproc
+
+
+
+
+
 
 .segment "ZEROPAGE"
 pad1: .res 1

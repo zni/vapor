@@ -11,6 +11,8 @@
 .import draw_enemy
 .import update_enemy
 .import spawn_enemy_pool
+.import update_bullets
+.import draw_bullets
 
 .proc nmi_handler
     LDA #$00
@@ -33,12 +35,15 @@
     BNE @loop
     TYA
     AND #STATE_ENEMY_ALIVE  ; one extra AND to trip processor flags
-    BNE enemy_seq
-respawn:
+    BNE @enemy_seq
+@respawn:
     JSR spawn_enemy_pool
-enemy_seq:
+@enemy_seq:
     JSR update_enemy
     JSR draw_enemy
+
+    JSR update_bullets
+    JSR draw_bullets
 
 
     LDA #$00
@@ -150,7 +155,7 @@ bg_palette:
     .byte $0f, $19, $09, $29
 sprite_palettes:
     .byte $0f, $2d, $10, $15
-    .byte $0f, $19, $09, $29
+    .byte $0f, $18, $28, $38
     .byte $0f, $19, $09, $29
     .byte $0f, $19, $09, $29
 

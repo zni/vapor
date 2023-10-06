@@ -33,7 +33,7 @@
     ADC #$08
     JMP @done_offset
 @dec2:
-    SEI
+    SEC
     SBC #$08
 @done_offset:
     STA enemy_y,x
@@ -80,7 +80,7 @@
     ADC #$02                ; add offset to enemy sprite tiles
     STA $0205,y             ; store tile
     ; load attrib
-    LDA #$01
+    LDA #$02
     STA $0206,y
     ; load x-coords
     LDA enemy_x,x

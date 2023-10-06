@@ -23,14 +23,14 @@
 
 ; Do we need to spawn a new pool of enemies?
     LDX #00
-loop:
+@loop:
     LDY enemy_state,x       ; get the state
     TYA
     AND #STATE_ENEMY_ALIVE  ; check if it's alive
     TAY
     INX
-    CPX #$03
-    BNE loop
+    CPX #MAX_ENEMY_POOL_SIZE
+    BNE @loop
     TYA
     AND #STATE_ENEMY_ALIVE  ; one extra AND to trip processor flags
     BNE enemy_seq
@@ -75,15 +75,6 @@ load_sprite_palettes:
     INX
     CPX #$10
     BNE load_sprite_palettes
-
-;     ; load sprites from memory
-;     LDX #$00
-; load_sprites:
-;     LDA sprites,X
-;     STA $0200,X
-;     INX
-;     CPX #$10
-;     BNE load_sprites
 
     ; load background elements
     LDY #$00            ; index            

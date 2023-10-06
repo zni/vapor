@@ -1,6 +1,10 @@
-; enemy locations are always > $0203
 .include "constants.inc"
-
+; NOTE TO SELF
+;
+; The Picture Processing Unit (PPU) in the NES can only draw 64 sprites 
+; per frame and 8 sprites per horizontal line (scanline). If the game 
+; tries to draw more than that, some of them will be invisible.
+; - https://retrocomputing.stackexchange.com/a/1146
 
 .segment "CODE"
 .export spawn_enemy_pool
@@ -13,16 +17,31 @@
     PHA
 
     LDX #$00
-    LDY #$10
+    LDY #$02
+    LDA #$08
+    STA enemy_offset
 @spawn:
-    LDA #%00000100
+    LDA #%00000101
     STA enemy_state,x
-    LDA #$01
+
+    LDA enemy_offset
+    CMP #$08
+    BEQ @dec2
+    JMP @inc2
+@inc2:
+    CLC
+    ADC #$08
+    JMP @done_offset
+@dec2:
+    SEI
+    SBC #$08
+@done_offset:
     STA enemy_y,x
+    STA enemy_offset
 
     TYA
     CLC
-    ADC #$10
+    ADC #$08
     TAY
     STY enemy_x,x
     INX
@@ -56,10 +75,10 @@
     STA $0204,y
     ; load tile
     LDA enemy_state,x
-    AND #STATE_ENEMY_TYPE
+    AND #STATE_ENEMY_TYPE   ; get type bits
     CLC
-    ADC #$02
-    STA $0205,y
+    ADC #$02                ; add offset to enemy sprite tiles
+    STA $0205,y             ; store tile
     ; load attrib
     LDA #$01
     STA $0206,y
@@ -67,9 +86,10 @@
     LDA enemy_x,x
     STA $0207,y
     CLC
-    TYA
-    ADC #$04
-    TAY
+    TYA                     ; get memory offset
+    ADC #$04                ; add offset into next OAM block
+    CLC
+    TAY                     ; swap back to Y
     INX
     CPY #(MAX_ENEMY_POOL_SIZE * 4)
     BNE @draw
@@ -98,14 +118,13 @@
 init_y:
     LDX #$00
 update_y:
-    LDA enemy_state,x
-    AND #STATE_ENEMY_ALIVE
-    BEQ cont_y
-
-    LDA enemy_y,x
-    CMP #$df
-    BEQ despawn_y
-    INC enemy_y,x
+    LDA enemy_state,x           ; get enemy state
+    AND #STATE_ENEMY_ALIVE      ; check if it's alive
+    BEQ cont_y                  ; if it's dead, don't update it
+    LDA enemy_y,x               ; get the enemy y-coord
+    CMP #$dd                    ; have we crossed the despawn boundary?
+    BEQ despawn_y               ; then despawn the enemy
+    INC enemy_y,x               ; otherwise, increase the y-coord
 cont_y:
     INX
     CPX #MAX_ENEMY_POOL_SIZE
@@ -125,7 +144,7 @@ init_x:
 ; update_x:
 ;     INC enemy_x,x
 ;     INX
-;     CPX #$03
+;     CPX #MAX_ENEMY_POOL_SIZE
 ;     BNE update_x
 
     PLA
@@ -140,9 +159,9 @@ init_x:
 .segment "ZEROPAGE"
 enemy_x: .res MAX_ENEMY_POOL_SIZE
 enemy_y: .res MAX_ENEMY_POOL_SIZE
-enemy_vel: .res MAX_ENEMY_POOL_SIZE
 enemy_state: .res MAX_ENEMY_POOL_SIZE
-;; enemy state  -> %00000Att
-;                        | |_ Type
-;                        |___ Alive
+; enemy state  -> %00000Att
+;                       | |_ Type
+;                       |___ Alive
+enemy_offset: .res 1
 .exportzp enemy_x, enemy_y, enemy_state

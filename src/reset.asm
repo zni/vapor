@@ -25,7 +25,7 @@ clear_oam:
 
     LDA #%10010000      ; turn on NMIs, sprites use first pattern table
     STA PPUCTRL
-    LDA #%00011000      ; turn on screen
+    LDA #%00011000      ; turn on screen - show bg / sprites
     STA PPUMASK
 
     LDA #$80
@@ -38,4 +38,3 @@ clear_oam:
 
 .segment "ZEROPAGE"
 .importzp player_x, player_y
-.importzp enemy_x, enemy_y

@@ -120,13 +120,6 @@ sprite_palettes:
     .byte $0f, $19, $09, $29
     .byte $0f, $19, $09, $29
 
-sprites:
-    ; y-coord, tile num, attributes, x-coord
-    .byte $70, $01, $00, $80
-    .byte $60, $02, $01, $80
-    .byte $50, $03, $02, $a0
-    .byte $40, $04, $03, $80
-
 
 .segment "ZEROPAGE"
 player_x: .res 1
@@ -134,4 +127,4 @@ player_y: .res 1
 tick: .res 1
 tock: .res 1
 .exportzp player_x, player_y
-.exportzp tick
+.exportzp tick, tock

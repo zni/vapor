@@ -14,7 +14,7 @@ all:
 		 src/bullets.o \
 		 src/background.o \
 		 src/collisions.o \
-		 src/main.o -C nes.cfg -o artifacts/vapor.nes
+		 src/main.o -C nes.cfg --dbgfile artifacts/vapor.dbg -o artifacts/vapor.nes
 
 clean:
 	rm -f src/*.o

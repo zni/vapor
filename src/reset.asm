@@ -36,12 +36,16 @@ clear_oam:
 
     LDA #$00
     STA last_frame_pad1
-
     STA tick
+    STA tock
 
     LDX #$00
 init_bullet_state:
+    LDA #$00
     STA bullet_state,x
+    LDA #$ff
+    STA bullet_x,x
+    STA bullet_y,x
     INX
     CPX #MAX_BULLET_POOL_SIZE
     BNE init_bullet_state
@@ -50,6 +54,8 @@ init_bullet_state:
 .endproc
 
 .segment "ZEROPAGE"
-.importzp player_x, player_y, last_frame_pad1, bullet_state
+.importzp player_x, player_y
+.importzp last_frame_pad1
+.importzp bullet_x, bullet_y, bullet_state
 .importzp ppuctrl_settings
-.importzp tick
+.importzp tick, tock

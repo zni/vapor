@@ -80,6 +80,9 @@
 
     LDX #$00
 @update:
+    LDA bullet_state,x
+    AND #STATE_BULLET_ALIVE
+    BEQ @continue
     LDA bullet_y,x
     CMP #$00                ; if we hit the top, despawn
     BEQ @despawn_bullet
@@ -124,9 +127,6 @@
     LDX #$00
     LDY #$00
 @draw:
-    LDA bullet_state,x
-    AND #STATE_BULLET_ALIVE
-    BEQ @skip
     LDA bullet_y,x
     STA $0230,y
 

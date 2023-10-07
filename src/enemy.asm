@@ -142,9 +142,9 @@ despawn_y:
 init_x:
     LDX #$00
 @update_x:
-    LDA enemy_x,x       ; load enemy's x-coord
-    CMP #$ff            ; is the enemy dead (hidden)?
-    BEQ @done_x         ; then move on
+    LDA enemy_state,x
+    AND #STATE_ENEMY_ALIVE
+    BEQ @done_x
     LDA player_x        ; load player's x-coord
     CMP enemy_x,x       ; where are we in relation?
     BCS @inc_x          ; if the player's x-coord is greater, increment

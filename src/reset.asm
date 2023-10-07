@@ -36,8 +36,15 @@ clear_oam:
     LDA #$00
     STA last_frame_pad1
 
+    LDX #$00
+init_bullet_state:
+    STA bullet_state,x
+    INX
+    CPX #MAX_BULLET_POOL_SIZE
+    BNE init_bullet_state
+
     JMP main
 .endproc
 
 .segment "ZEROPAGE"
-.importzp player_x, player_y, last_frame_pad1
+.importzp player_x, player_y, last_frame_pad1, bullet_state

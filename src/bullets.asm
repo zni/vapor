@@ -1,5 +1,36 @@
 .include "constants.inc"
 
+; Gets the next free bullet in the list.
+;   - modifies X
+.proc get_next_free_bullet
+    PHP
+    PHA
+    TYA
+    PHA
+
+    LDX #$00
+@loop:
+    LDA bullet_state,x
+    AND #STATE_BULLET_ALIVE
+    BNE @has_next
+    JMP @done
+@has_next:
+    CPX #MAX_BULLET_POOL_SIZE
+    BEQ @full
+    INX
+    CPX #MAX_BULLET_POOL_SIZE
+    BNE @loop
+    JMP @full
+
+@full:
+    LDX #$ff 
+@done:
+    PLA
+    TAY
+    PLA
+    PLP
+    RTS
+.endproc
 
 .export spawn_player_bullet
 .proc spawn_player_bullet
@@ -10,11 +41,11 @@
     TYA
     PHA
 
-    LDX next_bullet
-    CPX #MAX_BULLET_POOL_SIZE
-    BEQ @done
+    JSR get_next_free_bullet    ; get next free, store in X
+    CPX #$ff                    ; check if nothing is free
+    BEQ @done                   ; if yes, we're done here
 
-    LDA player_x
+    LDA player_x                ; otherwise, initialize our bullet
     STA bullet_x,x
     LDA player_y
     SEC
@@ -23,8 +54,6 @@
 
     LDA #STATE_BULLET_ALIVE
     STA bullet_state,x
-
-    INC next_bullet
 
 @done:
     PLA
@@ -49,9 +78,12 @@
     LDX #$00
 @update:
     LDA bullet_y,x
-    CMP #$00
+    CMP #$00                ; if we hit the top, despawn
     BEQ @despawn_bullet
-    DEC bullet_y,x
+    SEC
+    SBC #$04                ; move the bullet
+    BCC @despawn_bullet     ; if carry bit is clear, despawn
+    STA bullet_y,x          ; otherwise store y-coord
 @continue:
     INX
     CPX #MAX_BULLET_POOL_SIZE
@@ -64,7 +96,6 @@
     LDA bullet_state,x
     EOR #STATE_BULLET_ALIVE
     STA bullet_state,x
-    DEC next_bullet
     JMP @continue
 
 @done:
@@ -126,8 +157,8 @@
 
 
 .segment "ZEROPAGE"
-next_bullet: .res 1
 bullet_x: .res MAX_BULLET_POOL_SIZE
 bullet_y: .res MAX_BULLET_POOL_SIZE
 bullet_state: .res MAX_BULLET_POOL_SIZE
 .importzp player_x, player_y
+.exportzp bullet_state

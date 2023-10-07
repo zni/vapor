@@ -37,6 +37,8 @@ clear_oam:
     LDA #$00
     STA last_frame_pad1
 
+    STA tick
+
     LDX #$00
 init_bullet_state:
     STA bullet_state,x
@@ -50,3 +52,4 @@ init_bullet_state:
 .segment "ZEROPAGE"
 .importzp player_x, player_y, last_frame_pad1, bullet_state
 .importzp ppuctrl_settings
+.importzp tick

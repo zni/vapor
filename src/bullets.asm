@@ -3,7 +3,8 @@
 .segment "CODE"
 
 ; Gets the next free bullet in the list.
-;   - modifies X
+;   @return X   the location of the next free bullet 
+;               or #$ff if not available
 .proc get_next_free_bullet
     PHP
     PHA
@@ -163,4 +164,4 @@ bullet_x: .res MAX_BULLET_POOL_SIZE
 bullet_y: .res MAX_BULLET_POOL_SIZE
 bullet_state: .res MAX_BULLET_POOL_SIZE
 .importzp player_x, player_y
-.exportzp bullet_state
+.exportzp bullet_x, bullet_y, bullet_state

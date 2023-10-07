@@ -7,7 +7,14 @@ all:
 	ca65 src/enemy.asm
 	ca65 src/bullets.asm
 	ca65 src/background.asm
-	ld65 src/reset.o src/player.o src/enemy.o src/bullets.o src/background.o src/main.o -C nes.cfg -o artifacts/vapor.nes
+	ca65 src/collisions.asm
+	ld65 src/reset.o \
+		 src/player.o \
+		 src/enemy.o \
+		 src/bullets.o \
+		 src/background.o \
+		 src/collisions.o \
+		 src/main.o -C nes.cfg -o artifacts/vapor.nes
 
 clean:
 	rm -f src/*.o

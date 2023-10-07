@@ -17,36 +17,45 @@
 .import draw_starfield
 .import set_scroll_position
 
+.import collision_detection
+
 .proc nmi_handler
     LDA #$00
     STA OAMADDR
     LDA #$02
     STA OAMDMA
 
+    ; put together some kind of timing mechanism,
+    ; however bullshit it may be.
+    INC tick
+    LDA tick
+    CMP #$ff
+    BNE @updates
+    INC tock
+
+@updates:
     JSR update_player
     JSR draw_player
 
-; Do we need to spawn a new pool of enemies?
-    LDX #00
-@loop:
-    LDY enemy_state,x       ; get the state
-    TYA
-    AND #STATE_ENEMY_ALIVE  ; check if it's alive
-    TAY
-    INX
-    CPX #MAX_ENEMY_POOL_SIZE
-    BNE @loop
-    TYA
-    AND #STATE_ENEMY_ALIVE  ; one extra AND to trip processor flags
-    BNE @enemy_seq
-@respawn:
+    ; check the tocks for the keys to the future.
+    LDA tock
+    SEC
+    SBC #$01
+    CMP #$00
+    BEQ @spawn
+    JMP @enemy_updates
+
+@spawn:
     JSR spawn_enemy_pool
-@enemy_seq:
+
+@enemy_updates:
     JSR update_enemy
     JSR draw_enemy
 
     JSR update_bullets
     JSR draw_bullets
+
+    JSR collision_detection
 
     JSR set_scroll_position
 
@@ -122,5 +131,7 @@ sprites:
 .segment "ZEROPAGE"
 player_x: .res 1
 player_y: .res 1
+tick: .res 1
+tock: .res 1
 .exportzp player_x, player_y
-.importzp enemy_state
+.exportzp tick

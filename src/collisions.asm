@@ -21,7 +21,6 @@
     CLC
     ADC #$08            ; add the width
     STA object_x_w      ; store as object X + W
-    LDA object_x_w
     CMP bullet_x,x
     BEQ @loop_inc  
     BCS @hit_x          ; bullet_x < object_x_w
@@ -32,7 +31,6 @@
     CLC
     ADC #$08
     STA object_x_w
-    LDA object_x_w
     CMP enemy_x,y
     BEQ @loop_inc
     BCS @hit_y          ; object_x_w > enemy_x
@@ -43,7 +41,6 @@
     CLC
     ADC #$08
     STA object_y_h
-    LDA object_y_h
     CMP bullet_y, x
     BEQ @loop_inc
     BCS @hit_y2         ; bullet_y < object_y_h
@@ -54,7 +51,6 @@
     CLC
     ADC #$08
     STA object_y_h
-    LDA object_y_h
     CMP enemy_y, y
     BEQ @loop_inc
     BCS @collided       ; object_y_h > enemy_y
@@ -99,7 +95,6 @@
 .segment "ZEROPAGE"
 object_x_w: .res 1
 object_y_h: .res 1
-collision: .res 1
 .importzp enemy_x, enemy_y, enemy_state
 .importzp player_x, player_y
 .importzp bullet_x, bullet_y, bullet_state

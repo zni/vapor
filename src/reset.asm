@@ -25,6 +25,7 @@ clear_oam:
 
     LDA #%10010000      ; turn on NMIs, sprites use first pattern table
     STA PPUCTRL
+    STA ppuctrl_settings
     LDA #%00011000      ; turn on screen - show bg / sprites
     STA PPUMASK
 
@@ -48,3 +49,4 @@ init_bullet_state:
 
 .segment "ZEROPAGE"
 .importzp player_x, player_y, last_frame_pad1, bullet_state
+.importzp ppuctrl_settings

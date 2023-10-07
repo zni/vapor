@@ -14,6 +14,9 @@
 .import update_bullets
 .import draw_bullets
 
+.import draw_starfield
+.import set_scroll_position
+
 .proc nmi_handler
     LDA #$00
     STA OAMADDR
@@ -45,10 +48,8 @@
     JSR update_bullets
     JSR draw_bullets
 
+    JSR set_scroll_position
 
-    LDA #$00
-    STA $2005
-    STA $2005
     RTI
 .endproc
 
@@ -81,59 +82,10 @@ load_sprite_palettes:
     CPX #$10
     BNE load_sprite_palettes
 
-    ; load background elements
-    LDY #$00            ; index            
-    LDX #$01            ; tile#
-load_bg_big_stars:
-    LDA PPUSTATUS
-
-    LDA bg_big_stars,Y
-    STA PPUADDR
-    INY
-
-    LDA bg_big_stars,Y
-    STA PPUADDR
-
-    STX PPUDATA
-
-    CPY #$0a
-    INY
-    BNE load_bg_big_stars
-
-    ; set attribute table
-    LDX #%00000011
-    LDA PPUSTATUS
-    LDA #$23
-    STA PPUADDR
-    LDA #$c0
-    STA PPUADDR
-    STX PPUDATA
-
-    LDX #%11000000
-    LDA PPUSTATUS
-    LDA #$23
-    STA PPUADDR
-    LDA #$ee
-    STA PPUADDR
-    STX PPUDATA
-
-    LDY #$00
-    LDX #$02
-load_bg_little_stars:
-    LDA PPUSTATUS
-
-    LDA bg_little_stars,Y
-    STA PPUADDR
-    INY
-
-    LDA bg_little_stars,Y
-    STA PPUADDR
-
-    STX PPUDATA
-
-    CPY #$14
-    INY
-    BNE load_bg_little_stars
+    LDX #$20
+    JSR draw_starfield
+    LDX #$28
+    JSR draw_starfield
 
     JSR spawn_enemy_pool
 
@@ -166,24 +118,6 @@ sprites:
     .byte $50, $03, $02, $a0
     .byte $40, $04, $03, $80
 
-bg_big_stars:
-    .byte $20, $21
-    .byte $20, $bc
-    .byte $21, $27
-    .byte $22, $ab
-    .byte $22, $db
-
-bg_little_stars:
-    .byte $20, $3d
-    .byte $20, $68
-    .byte $20, $70
-    .byte $20, $d7
-    .byte $21, $7c
-    .byte $21, $cf
-    .byte $22, $04
-    .byte $22, $93
-    .byte $23, $08
-    .byte $23, $99
 
 .segment "ZEROPAGE"
 player_x: .res 1

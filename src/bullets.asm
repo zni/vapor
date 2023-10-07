@@ -1,5 +1,7 @@
 .include "constants.inc"
 
+.segment "CODE"
+
 ; Gets the next free bullet in the list.
 ;   - modifies X
 .proc get_next_free_bullet

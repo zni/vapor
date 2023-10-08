@@ -184,14 +184,16 @@
 
     LDX #$00
 @update_y:
-    LDA enemy_state,x           ; get enemy state
-    AND #STATE_ENEMY_ALIVE      ; check if it's alive
-    BEQ @cont_y                  ; if it's dead, don't update it
-    LDA enemy_y,x               ; get the enemy y-coord
-    CMP #$dd                    ; have we crossed the despawn boundary?
-    BEQ @despawn_y               ; then despawn the enemy
-    BCS @despawn_y               ; if we passed the despawn, ex: y-coord >= despawn, despawn also
-    INC enemy_y,x               ; otherwise, increase the y-coord
+    LDA enemy_state,x               ; get enemy state
+    AND #STATE_ENEMY_ALIVE          ; check if it's alive
+    BEQ @cont_y                     ; if it's dead, don't update it
+    
+    LDA enemy_y,x                   ; get the enemy y-coord
+    CMP #$dd                        ; have we crossed the despawn boundary?
+    BEQ @despawn_y                  ; then despawn the enemy
+    BCS @despawn_y                  ; if we passed the despawn, ex: y-coord >= despawn, despawn also
+
+    INC enemy_y,x                   ; otherwise, increase the y-coord
 @cont_y:
     INX
     CPX #MAX_ENEMY_POOL_SIZE
@@ -209,19 +211,38 @@
 @init_x:
     LDX #$00
 @update_x:
-    LDA enemy_state,x
-    AND #STATE_ENEMY_ALIVE
-    BEQ @done_x
-    LDA player_x        ; load player's x-coord
-    CMP enemy_x,x       ; where are we in relation?
-    BCS @inc_x          ; if the player's x-coord is greater, increment
-    BNE @dec_x          ; if ours is greater, decrement
-    BEQ @done_x         ; otherwise, we're right on track
+    LDA enemy_state,x           ; load enemy state
+    AND #STATE_ENEMY_ALIVE      ; check if we're actually alive
+    BEQ @done_x                 ; we're dead, move on
+
+    LDA enemy_x,x               ; load enemy x-coord
+    CMP #$01                    ; are we past the left boundary?
+    BEQ @despawn_x              ; we're right on it, despawn
+    BCC @despawn_x              ; we're beyond it, despawn
+
+    LDA enemy_x,x               ; load enemy x-coord
+    CMP #$f0                    ; are we past the right boundary?
+    BCS @despawn_x              ; we're beyond it, despawn
+    BEQ @despawn_x              ; we're right on it, despawn
+
+    LDA enemy_state,x           ; reload the enemy state
+    AND #STATE_ENEMY_DIR        ; get the direction of travel
+    BEQ @inc_x                  ; go right
+    JMP @dec_x                  ; go left
+
 @inc_x:
     INC enemy_x,x
     JMP @done_x
 @dec_x:
     DEC enemy_x,x
+    JMP @done_x
+@despawn_x:
+    LDA enemy_state,x
+    EOR #STATE_ENEMY_ALIVE
+    STA enemy_state,x
+    LDA #$ff
+    STA enemy_y,x
+    STA enemy_x,x
 @done_x:
     INX
     CPX #MAX_ENEMY_POOL_SIZE
@@ -278,9 +299,10 @@ level_1:
 enemy_x: .res MAX_ENEMY_POOL_SIZE
 enemy_y: .res MAX_ENEMY_POOL_SIZE
 enemy_state: .res MAX_ENEMY_POOL_SIZE
-; enemy state  -> %00000Att
-;                       | |_ Type
-;                       |___ Alive
+; enemy state  -> %0000LAtt
+;                      |||_ Type
+;                      ||___ Alive
+;                      |_____Direction (0 - right, 1 - left)
 enemy_offset: .res 1
 count: .res 1
 next_free: .res 1

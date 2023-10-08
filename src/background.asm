@@ -74,6 +74,16 @@
     CMP #$00
     BNE @set_positions
 
+    LDA screen
+    CMP #$04
+    BEQ @reset_screen
+    INC screen
+    JMP @scroll_settings
+@reset_screen:
+    LDA #$00
+    STA screen
+
+@scroll_settings:
     LDA ppuctrl_settings
     EOR #%00000010
     STA ppuctrl_settings
@@ -115,3 +125,4 @@ bg_little_stars:
 scroll: .res 1
 ppuctrl_settings: .res 1
 .exportzp ppuctrl_settings
+.importzp screen

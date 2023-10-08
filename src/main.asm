@@ -8,9 +8,12 @@
 
 .import draw_player
 .import update_player
+
 .import draw_enemy
 .import update_enemy
-.import spawn_enemy_pool
+.import spawn_enemy_for_screen
+.import enemy_liveness_check
+
 .import update_bullets
 .import draw_bullets
 
@@ -37,17 +40,10 @@
     JSR update_player
     JSR draw_player
 
-    ; check the tocks for the keys to the future.
-    LDA tock
-    SEC
-    SBC #$01
-    CMP #$00
-    BEQ @spawn
-    JMP @enemy_updates
-
-@spawn:
-    JSR spawn_enemy_pool
-
+    JSR enemy_liveness_check
+    CPY #$01
+    BEQ @enemy_updates
+    JSR spawn_enemy_for_screen
 @enemy_updates:
     JSR update_enemy
     JSR draw_enemy
@@ -96,8 +92,6 @@ load_sprite_palettes:
     LDX #$28
     JSR draw_starfield
 
-    JSR spawn_enemy_pool
-
 forever:
     JMP forever
 .endproc
@@ -126,5 +120,7 @@ player_x: .res 1
 player_y: .res 1
 tick: .res 1
 tock: .res 1
+screen: .res 1
 .exportzp player_x, player_y
 .exportzp tick, tock
+.exportzp screen

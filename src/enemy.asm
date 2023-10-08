@@ -7,8 +7,43 @@
 ; - https://retrocomputing.stackexchange.com/a/1146
 
 .segment "CODE"
-.export spawn_enemy_pool
-.proc spawn_enemy_pool
+
+.import get_random
+
+; Get next free enemy in pool.
+;   @return X - next free position or $ff if full.
+.proc get_next_free_enemy
+    PHP
+    PHA
+    TYA
+    PHA
+
+    LDX #$00
+@loop:
+    LDA enemy_state,x
+    AND #STATE_ENEMY_ALIVE
+    BNE @has_next
+    JMP @done
+@has_next:
+    CPX #MAX_ENEMY_POOL_SIZE
+    BEQ @full
+    INX
+    CPX #MAX_ENEMY_POOL_SIZE
+    BNE @loop
+    JMP @full
+
+@full:
+    LDX #$ff 
+@done:
+    PLA
+    TAY
+    PLA
+    PLP
+    RTS
+.endproc
+
+.export spawn_enemy_for_screen
+.proc spawn_enemy_for_screen
     PHP
     PHA
     TXA
@@ -17,36 +52,56 @@
     PHA
 
     LDX #$00
-    LDY #$02
-    LDA #$08
-    STA enemy_offset
 @spawn:
-    LDA #%00000101
-    STA enemy_state,x
-
-    LDA enemy_offset
-    CMP #$08
-    BEQ @dec2
-    JMP @inc2
-@inc2:
-    CLC
-    ADC #$08
-    JMP @done_offset
-@dec2:
-    SEC
-    SBC #$08
-@done_offset:
-    STA enemy_y,x
-    STA enemy_offset
-
-    TYA
-    CLC
-    ADC #$08
-    TAY
-    STY enemy_x,x
+    TXA
+    JSR get_next_free_enemy
+    CPX #$ff
+    BEQ @done
+    STX next_free
+    TAX
+    JSR spawn_enemy
+    LDA level_1,x
+    AND #%00001111
+    STA count
     INX
-    CPX #MAX_ENEMY_POOL_SIZE
+    CPX count
     BNE @spawn
+
+@done:
+    PLA
+    TAY
+    PLA
+    TAX
+    PLA
+    PLP
+    RTS
+.endproc
+
+.export spawn_enemy
+.proc spawn_enemy
+    PHP
+    PHA
+    TXA
+    PHA
+    TYA
+    PHA
+
+    LDY next_free                   ; initialize memory index
+    LDX screen                      ; load screen for offset into enemy type and amount
+    LDA level_1,x                   ; get the enemy type and amount
+    AND #%00110000                  ; get the enemy type
+    LSR                             ; shift to the end ...
+    LSR
+    LSR
+    LSR
+    EOR #STATE_ENEMY_ALIVE          ; mark it as alive
+    STA enemy_state,y               ; store the state
+
+    LDY next_free                   ; reload next_free
+    JSR get_random                  ; get a random value for x-coord
+    STA enemy_x,y                   ; store it at the next_free location
+    LDA #$00                        ; load up $00
+    STA enemy_y,y                   ; store it in the y-coord for next_free
 
     PLA
     TAY
@@ -115,7 +170,6 @@
     TYA
     PHA
 
-init_y:
     LDX #$00
 update_y:
     LDA enemy_state,x           ; get enemy state
@@ -169,6 +223,44 @@ init_x:
     RTS
 .endproc
 
+; Checks if a pool is still alive.
+;    @return Y - #$01 if yes else #$00
+.export enemy_liveness_check
+.proc enemy_liveness_check
+    PHP
+    PHA
+    TXA
+    PHA
+
+    LDX #$00
+@loop:
+    LDA enemy_state,x
+    AND #STATE_ENEMY_ALIVE
+    BEQ @return_false
+    INX
+    CMP #MAX_ENEMY_POOL_SIZE
+    BNE @loop
+
+@return_true:
+    LDY #$01
+    JMP @done
+
+@return_false:
+    LDY #$00
+
+@done:
+    PLA
+    TAX
+    PLA
+    PLP
+    RTS
+.endproc
+
+.segment "RODATA"
+level_1: 
+    .byte %00100011, %00100011, %00010011, %00000111
+
+
 .segment "ZEROPAGE"
 enemy_x: .res MAX_ENEMY_POOL_SIZE
 enemy_y: .res MAX_ENEMY_POOL_SIZE
@@ -177,5 +269,9 @@ enemy_state: .res MAX_ENEMY_POOL_SIZE
 ;                       | |_ Type
 ;                       |___ Alive
 enemy_offset: .res 1
+count: .res 1
+next_free: .res 1
 .exportzp enemy_x, enemy_y, enemy_state
 .importzp player_x, player_y
+.importzp tick, tock
+.importzp screen

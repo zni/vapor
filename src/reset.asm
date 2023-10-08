@@ -50,12 +50,25 @@ init_bullet_state:
     CPX #MAX_BULLET_POOL_SIZE
     BNE init_bullet_state
 
+    LDX #$00
+init_enemy_state:
+    LDA #$00
+    STA enemy_state,x
+    INX
+    CPX #MAX_ENEMY_POOL_SIZE
+    BNE init_enemy_state
+
+    LDA #$00
+    STA screen
+
     JMP main
 .endproc
 
 .segment "ZEROPAGE"
 .importzp player_x, player_y
+.importzp enemy_state
 .importzp last_frame_pad1
 .importzp bullet_x, bullet_y, bullet_state
 .importzp ppuctrl_settings
 .importzp tick, tock
+.importzp screen

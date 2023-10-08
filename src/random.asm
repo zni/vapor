@@ -10,24 +10,34 @@
     LDA seeded
     CMP #$01
     BEQ @gen
-    LDA #$ff
+    LDA tick
     STA lfsr
     LDA #$01
     STA seeded
 
 @gen:
     LDA lfsr
-    ROL A
+
+    LSR A
+    LSR A
     EOR lfsr
-    ROL A
-    ROL A
-    ROL A
+    STA lfsr
+
+    ASL A
+    ASL A
+    ASL A
+    ASL A
+    ASL A
     EOR lfsr
-    ROL A
-    ROL A
-    ROL A
-    ROL A
-    ROL A
+    STA lfsr
+
+    LSR A
+    LSR A
+    LSR A
+    LSR A
+    LSR A
+    LSR A
+    LSR A
     EOR lfsr
     STA lfsr
 

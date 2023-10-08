@@ -42,6 +42,7 @@
     RTS
 .endproc
 
+
 .export spawn_enemy_for_screen
 .proc spawn_enemy_for_screen
     PHP
@@ -59,7 +60,7 @@
     BEQ @done
     STX next_free
     TAX
-    JSR spawn_enemy
+    JSR _spawn_enemy
     LDA level_1,x
     AND #%00001111
     STA count
@@ -77,8 +78,16 @@
     RTS
 .endproc
 
-.export spawn_enemy
-.proc spawn_enemy
+; _spawn_enemy
+; Initialize an enemy's state, x-coord, and y-coord.
+; Only to be called by spawn_enemy_for_screen, or in a context
+; where next_free is valid.
+;
+;   @depends next_free      being populated with a valid address
+;   @depends get_random     used to initialize x-coord spawn location
+;
+.export _spawn_enemy
+.proc _spawn_enemy
     PHP
     PHA
     TXA
@@ -87,8 +96,10 @@
     PHA
 
     LDY next_free                   ; initialize memory index
+    CPY #$ff                        ; sanity check, is this actually free?
+    BEQ @done                       ; if not, get out of here.
     LDX screen                      ; load screen for offset into enemy type and amount
-    LDA level_1,x                   ; get the enemy type and amount
+    LDA level_1,x                   ; get the enemy type and amount: %00ttAAAA -> t = type, A = amount
     AND #%00110000                  ; get the enemy type
     LSR                             ; shift to the end ...
     LSR
@@ -103,6 +114,7 @@
     LDA #$00                        ; load up $00
     STA enemy_y,y                   ; store it in the y-coord for next_free
 
+@done:
     PLA
     TAY
     PLA
@@ -171,29 +183,30 @@
     PHA
 
     LDX #$00
-update_y:
+@update_y:
     LDA enemy_state,x           ; get enemy state
     AND #STATE_ENEMY_ALIVE      ; check if it's alive
-    BEQ cont_y                  ; if it's dead, don't update it
+    BEQ @cont_y                  ; if it's dead, don't update it
     LDA enemy_y,x               ; get the enemy y-coord
     CMP #$dd                    ; have we crossed the despawn boundary?
-    BEQ despawn_y               ; then despawn the enemy
+    BEQ @despawn_y               ; then despawn the enemy
+    BCS @despawn_y               ; if we passed the despawn, ex: y-coord >= despawn, despawn also
     INC enemy_y,x               ; otherwise, increase the y-coord
-cont_y:
+@cont_y:
     INX
     CPX #MAX_ENEMY_POOL_SIZE
-    BNE update_y
-    JMP init_x
-despawn_y:
+    BNE @update_y
+    JMP @init_x
+@despawn_y:
     LDA enemy_state,x
     EOR #STATE_ENEMY_ALIVE
     STA enemy_state,x
     LDA #$ff
     STA enemy_y,x
     STA enemy_x,x
-    JMP cont_y
+    JMP @cont_y
 
-init_x:
+@init_x:
     LDX #$00
 @update_x:
     LDA enemy_state,x

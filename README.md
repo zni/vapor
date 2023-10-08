@@ -2,6 +2,13 @@
 
 This is the result of following along with the [Famicom Party book](https://famicom.party/book/).
 
+## Prerequisites
+
+So, things needed for the build:
+
+- [cc65](https://cc65.github.io/)
+- make
+
 ## Build
 
 Just run:

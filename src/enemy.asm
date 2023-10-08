@@ -62,7 +62,7 @@
     TAX
     JSR _spawn_enemy
     LDA level_1,x
-    AND #%00001111
+    AND #LEVEL_ENEMY_AMT
     STA count
     INX
     CPX count
@@ -99,14 +99,18 @@
     CPY #$ff                        ; sanity check, is this actually free?
     BEQ @done                       ; if not, get out of here.
     LDX screen                      ; load screen for offset into enemy type and amount
-    LDA level_1,x                   ; get the enemy type and amount: %00ttAAAA -> t = type, A = amount
-    AND #%00110000                  ; get the enemy type
+    LDA level_1,x                   ; get the enemy type and amount: %0tttAAAA -> t = type, A = amount
+    AND #LEVEL_ENEMY_TYPE           ; get the enemy type
     LSR                             ; shift to the end ...
     LSR
     LSR
     LSR
     EOR #STATE_ENEMY_ALIVE          ; mark it as alive
     STA enemy_state,y               ; store the state
+    JSR get_random                  ; get a random number
+    AND #STATE_ENEMY_DIR            ; try and and it with a direction bit
+    EOR enemy_state,y               ; XOR it with enemy_state
+    STA enemy_state,y               ; store it in enemy_state
 
     LDY next_free                   ; reload next_free
     JSR get_random                  ; get a random value for x-coord
@@ -292,17 +296,18 @@
 
 .segment "RODATA"
 level_1: 
-    .byte %00100011, %00100011, %00010011, %00000111
+    .byte %00100011, %00110011, %00100011, %00000111
 
 
 .segment "ZEROPAGE"
 enemy_x: .res MAX_ENEMY_POOL_SIZE
 enemy_y: .res MAX_ENEMY_POOL_SIZE
 enemy_state: .res MAX_ENEMY_POOL_SIZE
-; enemy state  -> %0000LAtt
-;                      |||_ Type
-;                      ||___ Alive
-;                      |_____Direction (0 - right, 1 - left)
+; enemy state  -> %000LAttt
+;                     |||||
+;                     || +- Type
+;                     ||___ Alive
+;                     |_____Direction (0 - right, 1 - left)
 enemy_offset: .res 1
 count: .res 1
 next_free: .res 1

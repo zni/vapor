@@ -130,7 +130,7 @@
     LDA bullet_y,x
     STA $0230,y
 
-    LDA #$05
+    LDA #BULLET_TILE
     STA $0231,y
 
     LDA #$01

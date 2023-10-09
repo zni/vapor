@@ -111,6 +111,10 @@
     AND #STATE_ENEMY_DIR            ; try and and it with a direction bit
     EOR enemy_state,y               ; XOR it with enemy_state
     STA enemy_state,y               ; store it in enemy_state
+    JSR get_random
+    AND #STATE_ENEMY_ATTR
+    EOR enemy_state,y
+    STA enemy_state,y
 
     LDY next_free                   ; reload next_free
     JSR get_random                  ; get a random value for x-coord
@@ -151,7 +155,13 @@
     ADC #$02                ; add offset to enemy sprite tiles
     STA $0205,y             ; store tile
     ; load attrib
-    LDA #$02
+    LDA enemy_state,x
+    AND #STATE_ENEMY_ATTR
+    LSR A
+    LSR A
+    LSR A
+    LSR A
+    LSR A
     STA $0206,y
     ; load x-coords
     LDA enemy_x,x
@@ -323,11 +333,12 @@ level_1:
 enemy_x: .res MAX_ENEMY_POOL_SIZE
 enemy_y: .res MAX_ENEMY_POOL_SIZE
 enemy_state: .res MAX_ENEMY_POOL_SIZE
-; enemy state  -> %000LAttt
-;                     |||||
-;                     || +- Type
-;                     ||___ Alive
-;                     |_____Direction (0 - right, 1 - left)
+; enemy state  -> %0PPLAttt
+;                   |||||||
+;                   + || +-- Type
+;                   | ||____ Alive
+;                   | |_____ Direction (0 - right, 1 - left)
+;                   |_______ Palette (attribute bits)
 enemy_offset: .res 1
 count: .res 1
 next_free: .res 1

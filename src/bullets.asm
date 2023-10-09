@@ -84,10 +84,11 @@
     AND #STATE_BULLET_ALIVE
     BEQ @continue
     LDA bullet_y,x
-    CMP #$00                ; if we hit the top, despawn
+    CMP #$0a                ; if we hit the top, despawn
+    BCC @despawn_bullet
     BEQ @despawn_bullet
     SEC
-    SBC #$04                ; move the bullet
+    SBC #BULLET_SPEED       ; move the bullet
     BCC @despawn_bullet     ; if carry bit is clear, despawn
     STA bullet_y,x          ; otherwise store y-coord
 @continue:

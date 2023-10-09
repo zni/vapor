@@ -229,17 +229,37 @@
     BCS @despawn_x              ; we're beyond it, despawn
     BEQ @despawn_x              ; we're right on it, despawn
 
+    LDA player_x                ; load player's x-coord
+    CMP enemy_x,x               ; compare it with the current enemy's x-coord
+    BEQ @flip_dir               ; if it's equal flip directions
+    BMI @comp2                  ; if enemy_x > player_x, recompare
+    JMP @load_dir               ; otherwise, stay the course
+
+@comp2:
+    LDA enemy_x,x               ; load the current enemy's x-coord
+    CMP player_x                ; compare it with the player's x-coord
+    BCC @flip_dir               ; if player_x < enemy_x, flip the direction
+    JMP @load_dir               ; otherwise, stay the course
+
+@flip_dir:
     LDA enemy_state,x           ; reload the enemy state
-    AND #STATE_ENEMY_DIR        ; get the direction of travel
+    EOR #STATE_ENEMY_DIR        ; flip direction
+    STA enemy_state,x
+
+@load_dir:
+    LDA enemy_state,x
+    AND #STATE_ENEMY_DIR
     BEQ @inc_x                  ; go right
     JMP @dec_x                  ; go left
 
 @inc_x:
     INC enemy_x,x
     JMP @done_x
+
 @dec_x:
     DEC enemy_x,x
     JMP @done_x
+
 @despawn_x:
     LDA enemy_state,x
     EOR #STATE_ENEMY_ALIVE

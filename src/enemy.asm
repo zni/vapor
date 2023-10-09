@@ -55,19 +55,19 @@
 
     LDX #$00
 @spawn:
-    TXA
-    JSR get_next_free_enemy
-    CPX #$ff
-    BEQ @done
-    STX next_free
-    TAX
-    JSR _spawn_enemy
-    LDA level_1,x
-    AND #LEVEL_ENEMY_AMT
-    STA count
-    INX
-    CPX count
-    BNE @spawn
+    TXA                             ; Transfer X to A, as get_next_free_enemy stores its result in X
+    JSR get_next_free_enemy         ; Now get the next free enemy pool spot.
+    CPX #$ff                        ; Are there any free spots?
+    BEQ @done                       ; Nope.
+    STX next_free                   ; Yes, store it in next_free.
+    TAX                             ; Transfer A back to X
+    JSR _spawn_enemy                ; Let's spawn an enemy.
+    LDA level_1,x                   ; Load level data at X.
+    AND #LEVEL_ENEMY_AMT            ; Grab the amount of enemies to spawn.
+    STA count                       ; Store it in count.
+    INX                             ; Increment X.
+    CPX count                       ; Have we spawned everything?
+    BNE @spawn                      ; Nope, keep spawning.
 
 @done:
     PLA

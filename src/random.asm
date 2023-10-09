@@ -2,7 +2,7 @@
 
 .segment "CODE"
 ; get_random
-; generate random numbers based on the tick, tock variables.
+; generate random numbers with xorshift.
 ;   @return A - random number is placed in the accumulator
 .export get_random
 .proc get_random
@@ -20,7 +20,7 @@
 
     LSR A
     LSR A
-    EOR lfsr
+    EOR lfsr            ; lfsr ^= lfsr >> 2
     STA lfsr
 
     ASL A
@@ -28,7 +28,7 @@
     ASL A
     ASL A
     ASL A
-    EOR lfsr
+    EOR lfsr            ; lfsr ^= lfsr << 5
     STA lfsr
 
     LSR A
@@ -38,7 +38,7 @@
     LSR A
     LSR A
     LSR A
-    EOR lfsr
+    EOR lfsr            ; lfsr ^= lfsr >> 7
     STA lfsr
 
     RTS

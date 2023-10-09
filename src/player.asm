@@ -77,8 +77,12 @@ get_button_states:
     BEQ check_right
     LDA player_x
     CMP #$0a        ; are we at the left boundary?
+    BCC check_right
     BEQ check_right
-    DEC player_x
+    LDA player_x
+    SEC
+    SBC #PLAYER_SPEED
+    STA player_x
     
 check_right:
     LDA pad1
@@ -86,8 +90,12 @@ check_right:
     BEQ check_up
     LDA player_x
     CMP #$f0        ; are we at the right boundary?
+    BCS check_up
     BEQ check_up
-    INC player_x
+    LDA player_x
+    CLC
+    ADC #PLAYER_SPEED
+    STA player_x
 
 check_up:
     LDA pad1
@@ -95,8 +103,12 @@ check_up:
     BEQ check_down
     LDA player_y
     CMP #$0a        ; are we at the top boundary?
+    BCC check_down
     BEQ check_down
-    DEC player_y
+    LDA player_y
+    SEC
+    SBC #PLAYER_SPEED
+    STA player_y
 
 check_down:
     LDA pad1
@@ -104,8 +116,12 @@ check_down:
     BEQ check_a
     LDA player_y
     CMP #$df        ; are we at the bottom boundary?
+    BCS check_a
     BEQ check_a
-    INC player_y
+    LDA player_y
+    CLC
+    ADC #PLAYER_SPEED
+    STA player_y
 
 check_a:
     LDA pressed_pad1

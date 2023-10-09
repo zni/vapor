@@ -58,6 +58,17 @@ init_enemy_state:
     CPX #MAX_ENEMY_POOL_SIZE
     BNE init_enemy_state
 
+    LDX #$00
+init_enemy_bullet_state:
+    LDA #$00
+    STA enemy_bullet_state,x
+    LDA #$ff
+    STA enemy_bullet_x,x
+    STA enemy_bullet_y,y
+    INX
+    CPX #MAX_NME_BULLET_POOL_SIZE
+    BNE init_enemy_bullet_state
+
     LDA #$00
     STA screen
 
@@ -69,6 +80,7 @@ init_enemy_state:
 .importzp enemy_state
 .importzp last_frame_pad1
 .importzp bullet_x, bullet_y, bullet_state
+.importzp enemy_bullet_x, enemy_bullet_y, enemy_bullet_state
 .importzp ppuctrl_settings
 .importzp tick, tock
 .importzp screen

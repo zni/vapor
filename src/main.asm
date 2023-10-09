@@ -14,8 +14,10 @@
 .import spawn_enemy_for_screen
 .import enemy_liveness_check
 
-.import update_bullets
-.import draw_bullets
+.import update_player_bullets
+.import draw_player_bullets
+.import update_enemy_bullets
+.import draw_enemy_bullets
 
 .import draw_starfield
 .import set_scroll_position
@@ -48,8 +50,10 @@
     JSR update_enemy
     JSR draw_enemy
 
-    JSR update_bullets
-    JSR draw_bullets
+    JSR update_player_bullets
+    JSR draw_player_bullets
+    JSR update_enemy_bullets
+    JSR draw_enemy_bullets
 
     JSR collision_detection
 

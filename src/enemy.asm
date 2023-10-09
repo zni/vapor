@@ -9,6 +9,7 @@
 .segment "CODE"
 
 .import get_random
+.import spawn_enemy_bullet
 
 ; Get next free enemy in pool.
 ;   @return X - next free position or $ff if full.
@@ -208,6 +209,7 @@
     BCS @despawn_y                  ; if we passed the despawn, ex: y-coord >= despawn, despawn also
 
     INC enemy_y,x                   ; otherwise, increase the y-coord
+
 @cont_y:
     INX
     CPX #MAX_ENEMY_POOL_SIZE
@@ -239,6 +241,22 @@
     BCS @despawn_x              ; we're beyond it, despawn
     BEQ @despawn_x              ; we're right on it, despawn
 
+    LDA player_x
+    CMP enemy_x,x
+    BEQ @spawn_bullet
+    JMP @comp
+@spawn_bullet:
+    LDA enemy_state,x
+    AND #STATE_ENEMY_FIRE
+    BNE @comp
+    TXA
+    TAY
+    JSR spawn_enemy_bullet
+    LDA enemy_state,x
+    EOR #STATE_ENEMY_FIRE
+    STA enemy_state,x
+
+@comp:
     LDA player_x                ; load player's x-coord
     CMP enemy_x,x               ; compare it with the current enemy's x-coord
     BEQ @flip_dir               ; if it's equal flip directions
@@ -262,6 +280,8 @@
     BEQ @inc_x                  ; go right
     JMP @dec_x                  ; go left
 
+@landing_pad: JMP @update_x
+
 @inc_x:
     INC enemy_x,x
     JMP @done_x
@@ -280,7 +300,7 @@
 @done_x:
     INX
     CPX #MAX_ENEMY_POOL_SIZE
-    BNE @update_x
+    BNE @landing_pad
 
     PLA
     TAY
@@ -333,12 +353,13 @@ level_1:
 enemy_x: .res MAX_ENEMY_POOL_SIZE
 enemy_y: .res MAX_ENEMY_POOL_SIZE
 enemy_state: .res MAX_ENEMY_POOL_SIZE
-; enemy state  -> %0PPLAttt
-;                   |||||||
-;                   + || +-- Type
-;                   | ||____ Alive
-;                   | |_____ Direction (0 - right, 1 - left)
-;                   |_______ Palette (attribute bits)
+; enemy state  -> %fPPLAttt
+;                  ||||||||
+;                  |+ || +-- Type
+;                  || ||____ Alive
+;                  || |_____ Direction (0 - right, 1 - left)
+;                  ||_______ Palette (attribute bits)
+;                  |________ Fired Bullet (0 - false, 1 - true)
 enemy_offset: .res 1
 count: .res 1
 next_free: .res 1

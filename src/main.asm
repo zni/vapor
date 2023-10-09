@@ -22,7 +22,7 @@
 .import draw_starfield
 .import set_scroll_position
 
-.import collision_detection
+.import collision_detection_first_round
 
 .proc nmi_handler
     LDA #$00
@@ -55,7 +55,7 @@
     JSR update_enemy_bullets
     JSR draw_enemy_bullets
 
-    JSR collision_detection
+    JSR collision_detection_first_round
 
     JSR set_scroll_position
 

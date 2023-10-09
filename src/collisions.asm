@@ -1,10 +1,9 @@
 .include "constants.inc"
 
-
-; Perform AABB collision detection.
-; TODO: add collisions between player and enemies.
-.export collision_detection
-.proc collision_detection
+; collision_detection_first_round
+; Perform AABB collision detection on player bullets and enemies.
+.export collision_detection_first_round
+.proc collision_detection_first_round
     PHP
     PHA
     TXA

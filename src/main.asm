@@ -23,6 +23,7 @@
 .import set_scroll_position
 
 .import collision_detection_first_round
+.import collision_detection_second_round
 
 .proc nmi_handler
     LDA #$00
@@ -56,6 +57,7 @@
     JSR draw_enemy_bullets
 
     JSR collision_detection_first_round
+    JSR collision_detection_second_round
 
     JSR set_scroll_position
 
@@ -122,9 +124,10 @@ sprite_palettes:
 .segment "ZEROPAGE"
 player_x: .res 1
 player_y: .res 1
+player_state: .res 1
 tick: .res 1
 tock: .res 1
 screen: .res 1
-.exportzp player_x, player_y
+.exportzp player_x, player_y, player_state
 .exportzp tick, tock
 .exportzp screen

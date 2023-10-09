@@ -33,6 +33,10 @@ clear_oam:
     STA player_x
     LDA #$a0
     STA player_y
+    
+    LDA #$00
+    EOR STATE_PLAYER_ALIVE
+    STA player_state
 
     LDA #$00
     STA last_frame_pad1
@@ -76,7 +80,7 @@ init_enemy_bullet_state:
 .endproc
 
 .segment "ZEROPAGE"
-.importzp player_x, player_y
+.importzp player_x, player_y, player_state
 .importzp enemy_state
 .importzp last_frame_pad1
 .importzp bullet_x, bullet_y, bullet_state

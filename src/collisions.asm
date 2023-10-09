@@ -91,9 +91,91 @@
     RTS
 .endproc
 
+.export collision_detection_second_round
+.proc collision_detection_second_round
+    PHP
+    PHA
+    TXA
+    PHA
+    TYA
+    PHA
+
+    LDX #$00
+@loop:
+    LDA player_x       ; load object x-coord
+    CLC
+    ADC #$08            ; add the width
+    STA object_x_w      ; store as object X + W
+    CMP enemy_bullet_x,x
+    BEQ @loop_inc  
+    BCS @hit_x          ; bullet_x < object_x_w
+    JMP @loop_inc
+
+@hit_x:
+    LDA enemy_bullet_x,x
+    CLC
+    ADC #$08
+    STA object_x_w
+    CMP player_x
+    BEQ @loop_inc
+    BCS @hit_y          ; object_x_w > player_x
+    JMP @loop_inc
+
+@hit_y:
+    LDA player_y
+    CLC
+    ADC #$08
+    STA object_y_h
+    CMP enemy_bullet_y,x
+    BEQ @loop_inc
+    BCS @hit_y2         ; enemy_bullet_y < object_y_h
+    JMP @loop_inc
+
+@hit_y2:
+    LDA enemy_bullet_y,x
+    CLC
+    ADC #$08
+    STA object_y_h
+    CMP player_y
+    BEQ @loop_inc
+    BCS @collided       ; object_y_h > player_y
+    JMP @loop_inc
+
+@collided:
+    LDA enemy_bullet_state,x
+    EOR #STATE_BULLET_ALIVE
+    STA enemy_bullet_state,x
+    LDA #$ff
+    STA enemy_bullet_x, x
+    STA enemy_bullet_y, y
+
+    LDA player_state
+    EOR #STATE_PLAYER_ALIVE
+    STA player_state
+    LDA #$ff
+    STA player_x
+    STA player_y
+
+@loop_inc:
+    INX
+    CPX #MAX_NME_BULLET_POOL_SIZE
+    BNE @loop
+
+
+@done:
+    PLA
+    TAY
+    PLA
+    TAX
+    PLA
+    PLP
+    RTS
+.endproc
+
 .segment "ZEROPAGE"
 object_x_w: .res 1
 object_y_h: .res 1
 .importzp enemy_x, enemy_y, enemy_state
-.importzp player_x, player_y
+.importzp player_x, player_y, player_state
 .importzp bullet_x, bullet_y, bullet_state
+.importzp enemy_bullet_x, enemy_bullet_y, enemy_bullet_state

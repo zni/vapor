@@ -62,6 +62,10 @@ get_button_states:
     BCC get_button_states
 ;;;; end get input
 
+    LDA player_state
+    AND #STATE_PLAYER_ALIVE
+    BNE death_spiral
+
     LDA pad1
     EOR #%11111111
     AND last_frame_pad1
@@ -96,6 +100,9 @@ check_right:
     CLC
     ADC #PLAYER_SPEED
     STA player_x
+    JMP check_up
+
+death_spiral: JMP done_checking
 
 check_up:
     LDA pad1
@@ -152,5 +159,5 @@ pad1: .res 1
 last_frame_pad1: .res 1
 released_pad1: .res 1
 pressed_pad1: .res 1
-.importzp player_x, player_y
+.importzp player_x, player_y, player_state
 .exportzp last_frame_pad1

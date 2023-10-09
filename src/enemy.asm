@@ -21,17 +21,17 @@
 
     LDX #$00
 @loop:
-    LDA enemy_state,x
-    AND #STATE_ENEMY_ALIVE
-    BNE @has_next
-    JMP @done
+    LDA enemy_state,x               ; Check enemy_state at X.
+    AND #STATE_ENEMY_ALIVE          ; Is it alive?
+    BNE @has_next                   ; It is so check the next one.
+    JMP @done                       ; Otherwise we found our free space.
 @has_next:
-    CPX #MAX_ENEMY_POOL_SIZE
-    BEQ @full
-    INX
-    CPX #MAX_ENEMY_POOL_SIZE
-    BNE @loop
-    JMP @full
+    CPX #MAX_ENEMY_POOL_SIZE        ; Are we at the max pool size.
+    BEQ @full                       ; Then we're full.
+    INX                             ; Otherwise increment...
+    CPX #MAX_ENEMY_POOL_SIZE        ; and check if we're at the max pool size again.
+    BNE @loop                       ; Not yet, keep looping.
+    JMP @full                       ; Yep, return full.
 
 @full:
     LDX #$ff 

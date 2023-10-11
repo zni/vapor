@@ -244,6 +244,17 @@
     CLC
     ADC #ENEMY_BULLET_SPEED           ; move the bullet
     STA enemy_bullet_y,x              ; store y-coord
+
+    LDA enemy_bullet_x,x
+    SEC
+    SBC player_x
+    BMI @inc_x
+    BCC @dec_x
+@inc_x:
+    INC enemy_bullet_x,x
+    JMP @continue
+@dec_x:
+    DEC enemy_bullet_x,x
 @continue:
     INX
     CPX #MAX_NME_BULLET_POOL_SIZE

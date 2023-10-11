@@ -9,8 +9,8 @@
 .import draw_player
 .import update_player
 
-.import draw_enemy
-.import update_enemy
+.import draw_enemies
+.import update_enemies
 .import spawn_enemy_for_screen
 .import enemy_liveness_check
 
@@ -48,8 +48,8 @@
     BEQ @enemy_updates
     JSR spawn_enemy_for_screen
 @enemy_updates:
-    JSR update_enemy
-    JSR draw_enemy
+    JSR update_enemies
+    JSR draw_enemies
 
     JSR update_player_bullets
     JSR draw_player_bullets

@@ -52,7 +52,15 @@
     PHA
     TYA
     PHA
+    ; TODO make this not crazy
+    LDA tock                        ; Load the number of tocks that have passed.
+    CMP #$01                        ; Has more than 1 tock passed?
+    BCS @init                       ; If tock >= $01, start spawning.
+    JMP @done                       ; Otherwise, jump to done.
 
+@init:
+    LDA #$00
+    STA tock
     LDX #$00
 @spawn:
     TXA                             ; Transfer X to A, as get_next_free_enemy stores its result in X
@@ -133,50 +141,40 @@
     RTS
 .endproc
 
-
-.export draw_enemy
-.proc draw_enemy
+.export draw_enemies
+.proc draw_enemies
     PHP
     PHA
     TXA
     PHA
     TYA
     PHA
-  
-    LDX #$00
+
     LDY #$00
-@draw:
-    ; load y-coord
-    LDA enemy_y,x
-    STA $0204,y
-    ; load tile
+    STY enemy_offset
+    LDX #$00
+@loop:
+    LDY enemy_offset
+    CMP #(MAX_ENEMY_POOL_SIZE * 4)
+    BEQ @done
+
     LDA enemy_state,x
-    AND #STATE_ENEMY_TYPE   ; get type bits
-    CLC
-    ADC #$02                ; add offset to enemy sprite tiles
-    STA $0205,y             ; store tile
-    ; load attrib
-    LDA enemy_state,x
-    AND #STATE_ENEMY_ATTR
-    LSR A
-    LSR A
-    LSR A
-    LSR A
-    LSR A
-    STA $0206,y
-    ; load x-coords
-    LDA enemy_x,x
-    STA $0207,y
-    CLC
-    TYA                     ; get memory offset
-    ADC #$04                ; add offset into next OAM block
-    CLC
-    TAY                     ; swap back to Y
+    AND #STATE_ENEMY_TYPE
+    TAY
+    LDA tile_size,y
+    CMP #$01
+    BEQ @single
+@multi:
+    ;JSR _draw_enemy_multitile
+    JMP @cont
+@single:
+    JSR _draw_enemy_tile
+@cont:
     INX
-    CPY #(MAX_ENEMY_POOL_SIZE * 4)
-    BNE @draw
+    CMP #MAX_ENEMY_POOL_SIZE
+    BNE @loop
 
-
+@done:
     PLA
     TAY
     PLA
@@ -186,10 +184,77 @@
     RTS
 .endproc
 
+; .proc _draw_enemy_multitile
+;     LDY #$00
+;     STY enemy_offset
+
+;     LDA enemy_y,x               ; load y-coord
+;     STA ENEMY_SPRITE_Y_COORD,y
+
+;     LDA enemy_state,x           ; load tile
+;     AND #STATE_ENEMY_TYPE       ; get type bits
+;     STX enemy_offset
+;     TAX
+;     LDA tile_index,x
+;     STA ENEMY_SPRITE_TILE,y     ; store tile
+;     LDA enemy_state,x
+
+;     AND #STATE_ENEMY_ATTR
+;     LSR A
+;     LSR A
+;     LSR A
+;     LSR A
+;     LSR A
+;     STA ENEMY_SPRITE_ATTR,y      ; load attrib
+
+;     LDA enemy_x,x
+;     STA ENEMY_SPRITE_X_COORD,y
+
+;     RTS
+; .endproc
+
+; _draw_enemy_tile
+; Draws an enemy that takes up a single tile.
+; @arg X    the offset into the enemy pool
+;
+; @no-modify X
+.proc _draw_enemy_tile
+    LDY enemy_offset
+
+    LDA enemy_y,x               ; load y-coord
+    STA ENEMY_SPRITE_Y_COORD,y
+
+    LDA enemy_state,x           ; get enemy state
+    AND #STATE_ENEMY_TYPE       ; get the type bits
+    TAY                         ; transfer the bits to Y
+    LDA tile_index,y            ; load the tile_index at Y
+    LDY enemy_offset            ; load enemy_offset back into Y
+    STA ENEMY_SPRITE_TILE,y     ; store tile at offset Y
+
+    LDA enemy_state,x
+    AND #STATE_ENEMY_ATTR
+    LSR A
+    LSR A
+    LSR A
+    LSR A
+    LSR A
+    STA ENEMY_SPRITE_ATTR,y      ; load attrib
+
+    LDA enemy_x,x
+    STA ENEMY_SPRITE_X_COORD,y
+
+    CLC
+    TYA                          ; get memory offset
+    ADC #$04                     ; add offset into next OAM block
+    STA enemy_offset
+
+    RTS
+.endproc
 
 
-.export update_enemy
-.proc update_enemy
+
+.export update_enemies
+.proc update_enemies
     PHP
     PHA
     TXA
@@ -241,8 +306,11 @@
     BCS @despawn_x              ; we're beyond it, despawn
     BEQ @despawn_x              ; we're right on it, despawn
 
-    LDA player_x
-    CMP enemy_x,x
+    LDA player_y
+    SEC
+    SBC enemy_y,x
+    CMP #$10
+    BCS @spawn_bullet
     BEQ @spawn_bullet
     JMP @comp
 @spawn_bullet:
@@ -346,7 +414,11 @@
 
 .segment "RODATA"
 level_1: 
-    .byte %00100011, %00110011, %00100011, %00000111
+    .byte %00100000, %00110000, %00100011, %00000111
+tile_index:
+    .byte $02, $03, $04, $05, $20
+tile_size:
+    .byte $01, $01, $01, $01, $04
 
 
 .segment "ZEROPAGE"
@@ -361,6 +433,7 @@ enemy_state: .res MAX_ENEMY_POOL_SIZE
 ;                  ||_______ Palette (attribute bits)
 ;                  |________ Fired Bullet (0 - false, 1 - true)
 enemy_offset: .res 1
+enemy_tile_index: .res 1
 count: .res 1
 next_free: .res 1
 .exportzp enemy_x, enemy_y, enemy_state

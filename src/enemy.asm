@@ -11,6 +11,8 @@
 .import get_random
 .import spawn_enemy_bullet
 
+.import mod
+
 ; Get next free enemy in pool.
 ;   @return X - next free position or $ff if full.
 .proc get_next_free_enemy
@@ -52,16 +54,16 @@
     PHA
     TYA
     PHA
-    ; TODO make this not crazy
+
     LDA tock                        ; Load the number of tocks that have passed.
-    CMP #$01                        ; Has more than 1 tock passed?
-    BCS @init                       ; If tock >= $01, start spawning.
+    STA left_op
+    LDA #$02 
+    STA right_op
+    JSR mod                         ; tock % 2
+    CMP #$00                        ; Is tock divisible by 2?
+    BEQ @spawn                      ; If tock % 2 = $00, start spawning.
     JMP @done                       ; Otherwise, jump to done.
 
-@init:
-    LDA #$00
-    STA tock
-    LDX #$00
 @spawn:
     TXA                             ; Transfer X to A, as get_next_free_enemy stores its result in X
     JSR get_next_free_enemy         ; Now get the next free enemy pool spot.
@@ -440,3 +442,6 @@ next_free: .res 1
 .importzp player_x, player_y
 .importzp tick, tock
 .importzp screen
+
+.segment "BSS"
+.import left_op, right_op

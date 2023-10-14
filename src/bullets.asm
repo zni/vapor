@@ -191,11 +191,17 @@
 
 ; spawn_enemy_bullet
 ;   @arg Y  the offset of the enemy
+.BSS
+enemy_bullet_y_offset: .byte $00
+.export enemy_bullet_y_offset
+.CODE
 .export spawn_enemy_bullet
 .proc spawn_enemy_bullet
     PHP
     PHA
     TXA
+    PHA
+    TYA
     PHA
 
     JSR get_next_free_enemy_bullet      ; get next free, store in X
@@ -214,6 +220,8 @@
     STA enemy_bullet_state,x
 
 @done:
+    PLA
+    TAY
     PLA
     TAX
     PLA

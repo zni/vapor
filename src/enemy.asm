@@ -226,6 +226,7 @@ draw_enemy_index: .res 1
 ;
 .BSS
 update_index: .res 1
+.import enemy_bullet_y_offset
 .CODE
 .proc _update_enemy
     PHP
@@ -271,6 +272,17 @@ update_index: .res 1
     LDA enemy_behavior,x
     ORA #BEHAVIOR_TRIGGERED
     STA enemy_behavior,x
+
+@fire_bullet:
+    LDA enemy_y,x
+    STA enemy_bullet_y_offset
+    LDA enemy_state,x
+    AND #STATE_ENEMY_FIRE
+    BNE @apply_behavior
+    JSR spawn_enemy_bullet
+    LDA enemy_state,x
+    EOR #STATE_ENEMY_FIRE
+    STA enemy_state,x
 
 @apply_behavior:
     JSR behavior_movement

@@ -13,6 +13,6 @@ So, things needed for the build:
 
 Just run:
 ```
-make
+CA65_PATH=/path/to/cc65/bin make
 ```
 from the root of the repo. The ROM will be placed in the artifacts directory if it was successful.

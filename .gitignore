@@ -1,4 +1,5 @@
 artifacts/*.cdl
+artifacts/*.fdb
 artifacts/*.dbg
 artifacts/*.nes
 artifacts/*.nes.ram.nl

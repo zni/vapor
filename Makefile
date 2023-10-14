@@ -1,16 +1,16 @@
 .PHONY: all clean
 
 all:
-	ca65 src/main.asm
-	ca65 src/reset.asm
-	ca65 src/player.asm
-	ca65 src/enemy.asm
-	ca65 src/bullets.asm
-	ca65 src/background.asm
-	ca65 src/collisions.asm
-	ca65 src/random.asm
-	ca65 src/utils.asm
-	ld65 src/reset.o \
+	$(CA65_PATH)/ca65 src/main.asm
+	$(CA65_PATH)/ca65 src/reset.asm
+	$(CA65_PATH)/ca65 src/player.asm
+	$(CA65_PATH)/ca65 src/enemy.asm
+	$(CA65_PATH)/ca65 src/bullets.asm
+	$(CA65_PATH)/ca65 src/background.asm
+	$(CA65_PATH)/ca65 src/collisions.asm
+	$(CA65_PATH)/ca65 src/random.asm
+	$(CA65_PATH)/ca65 src/utils.asm
+	$(CA65_PATH)/ld65 src/reset.o \
 		 src/player.o \
 		 src/enemy.o \
 		 src/bullets.o \

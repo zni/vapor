@@ -67,8 +67,10 @@ spawn_count: .byte $00          ; @internal
 spawn_enemy_type: .res 1        ; @external
 spawn_enemy_amount: .res 1      ; @external
 spawn_enemy_x_coord: .res 1     ; @external
+spawn_enemy_behavior: .res 1    ; @external
 y_offset: .res 1                ; @internal
 .export spawn_enemy_type, spawn_enemy_amount, spawn_enemy_x_coord
+.export spawn_enemy_behavior
 .CODE
 .export spawn_enemies_for_stage
 .proc spawn_enemies_for_stage
@@ -108,6 +110,9 @@ y_offset: .res 1                ; @internal
     LDA spawn_enemy_type
     EOR enemy_state,x
     STA enemy_state,x
+
+    LDA spawn_enemy_behavior
+    STA enemy_behavior,x
 
     LDX spawn_count
     INX
@@ -251,9 +256,27 @@ update_index: .res 1
     BCS @despawn
     BEQ @despawn
 
-    ;LDA #$80
-    ;STA enemy_x,x
+    LDA enemy_y,x
+    CMP #$80
+    BCC @check_trigger
+    BCS @apply_trigger
 
+@check_trigger:
+    LDA enemy_behavior,x
+    AND #BEHAVIOR_TRIGGERED
+    BNE @apply_behavior
+    JMP @apply_regular
+
+@apply_trigger:
+    LDA enemy_behavior,x
+    ORA #BEHAVIOR_TRIGGERED
+    STA enemy_behavior,x
+
+@apply_behavior:
+    JSR behavior_movement
+    JMP @done
+
+@apply_regular:
     LDA enemy_y,x
     CLC
     ADC #ENEMY_SPEED
@@ -266,6 +289,75 @@ update_index: .res 1
     STA enemy_state,x
     LDA #$ff
     STA enemy_y,x
+    STA enemy_x,x
+
+@done:
+    PLA
+    TAY
+    PLA
+    TAX
+    PLA
+    PLP
+    RTS
+.endproc
+
+.proc behavior_movement
+    PHP
+    PHA
+    TXA
+    PHA
+    TYA
+    PHA
+
+    LDX update_index
+
+    LDA enemy_behavior,x
+    AND #BEHAVIOR_UP
+    BNE @move_up
+    JMP @check_down
+
+@move_up:
+    LDA enemy_y,x
+    SEC
+    SBC #ENEMY_SPEED
+    STA enemy_y,x
+    JMP @check_left
+
+@check_down:
+    LDA enemy_behavior,x
+    AND #BEHAVIOR_DOWN
+    BNE @move_down
+    JMP @check_left
+
+@move_down:
+    LDA enemy_y,x
+    CLC
+    ADC #ENEMY_SPEED
+    STA enemy_y,x
+
+@check_left:
+    LDA enemy_behavior,x
+    AND #BEHAVIOR_LEFT
+    BNE @move_left
+    JMP @check_right
+
+@move_left:
+    LDA enemy_x,x
+    SEC
+    SBC #ENEMY_SPEED
+    STA enemy_x,x
+    JMP @done
+
+@check_right:
+    LDA enemy_behavior,x
+    AND #BEHAVIOR_RIGHT
+    BNE @move_right
+    JMP @done
+
+@move_right:
+    LDA enemy_x,x
+    CLC
+    ADC #ENEMY_SPEED
     STA enemy_x,x
 
 @done:
@@ -350,9 +442,10 @@ tile_size:
 
 
 .segment "ZEROPAGE"
-enemy_x: .res MAX_ENEMY_POOL_SIZE
-enemy_y: .res MAX_ENEMY_POOL_SIZE
-enemy_state: .res MAX_ENEMY_POOL_SIZE
+enemy_x:         .res MAX_ENEMY_POOL_SIZE
+enemy_y:         .res MAX_ENEMY_POOL_SIZE
+enemy_behavior:  .res MAX_ENEMY_POOL_SIZE
+enemy_state:     .res MAX_ENEMY_POOL_SIZE
 ; enemy state  -> %fPPLAttt
 ;                  ||||||||
 ;                  |+ || +-- Type

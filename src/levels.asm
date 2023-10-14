@@ -50,6 +50,7 @@
 
 .BSS
 .import spawn_enemy_amount, spawn_enemy_type, spawn_enemy_x_coord
+.import spawn_enemy_behavior
 .CODE
 .import spawn_enemies_for_stage 
 .proc _spawn_next_section
@@ -99,6 +100,9 @@
     STA spawn_enemy_x_coord
     LDX stage_index
 
+    LDA level_1_behaviors,x
+    STA spawn_enemy_behavior
+
     JSR spawn_enemies_for_stage
 
 @next_stage:
@@ -127,6 +131,8 @@ stage_index: .res 1
 stage_spawned:
     .byte $00, $00, $00, $00
     .byte $00, $00, $00, $00
+    .byte $00, $00, $00, $00
+    .byte $00, $00, $00, $00
 
 .segment "RODATA"
 levels: 
@@ -141,6 +147,17 @@ level_1:
 ; level_X    -> %TTTTAAAA
 ; T = 4 bits: enemy type
 ; A = 4 bits: amount to spawn
+
+level_1_behaviors:
+    .byte %00001001, %00000010, %00000001, %00000010
+    .byte %00001001, %00001010, %00001001, %00001001
+    .byte %00000000, %00000000, %00000000, %00000000
+    .byte %00000000, %00000000, %00000000, %00000000
+; level_X_behaviors -> %0000UDLR
+; U = 1 bit: up direction
+; D = 1 bit: down direction
+; L = 1 bit: left direction
+; R = 1 bit: right direction
 
 ; the tocks that need to have passed to trigger a stage.
 level_1_tocks:

@@ -14,9 +14,14 @@
 .import mod
 
 ; Get next free enemy in pool.
-;   @return X - next free position or $ff if full.
+;   @return next_free_enemy - next free position or $ff if full.
+.BSS
+next_free_enemy: .byte 00
+.CODE
 .proc get_next_free_enemy
     PHP
+    PHA
+    TXA
     PHA
     TYA
     PHA
@@ -26,7 +31,9 @@
     LDA enemy_state,x               ; Check enemy_state at X.
     AND #STATE_ENEMY_ALIVE          ; Is it alive?
     BNE @has_next                   ; It is so check the next one.
+    STX next_free_enemy
     JMP @done                       ; Otherwise we found our free space.
+
 @has_next:
     CPX #MAX_ENEMY_POOL_SIZE        ; Are we at the max pool size.
     BEQ @full                       ; Then we're full.
@@ -36,48 +43,8 @@
     JMP @full                       ; Yep, return full.
 
 @full:
-    LDX #$ff 
-@done:
-    PLA
-    TAY
-    PLA
-    PLP
-    RTS
-.endproc
-
-
-.export spawn_enemy_for_screen
-.proc spawn_enemy_for_screen
-    PHP
-    PHA
-    TXA
-    PHA
-    TYA
-    PHA
-
-    LDA tock                        ; Load the number of tocks that have passed.
-    STA left_op
-    LDA #$02 
-    STA right_op
-    JSR mod                         ; tock % 2
-    CMP #$00                        ; Is tock divisible by 2?
-    BEQ @spawn                      ; If tock % 2 = $00, start spawning.
-    JMP @done                       ; Otherwise, jump to done.
-
-@spawn:
-    TXA                             ; Transfer X to A, as get_next_free_enemy stores its result in X
-    JSR get_next_free_enemy         ; Now get the next free enemy pool spot.
-    CPX #$ff                        ; Are there any free spots?
-    BEQ @done                       ; Nope.
-    STX next_free                   ; Yes, store it in next_free.
-    TAX                             ; Transfer A back to X
-    JSR _spawn_enemy                ; Let's spawn an enemy.
-    LDA level_1,x                   ; Load level data at X.
-    AND #LEVEL_ENEMY_AMT            ; Grab the amount of enemies to spawn.
-    STA count                       ; Store it in count.
-    INX                             ; Increment X.
-    CPX count                       ; Have we spawned everything?
-    BNE @spawn                      ; Nope, keep spawning.
+    LDX #$ff
+    STX next_free_enemy
 
 @done:
     PLA
@@ -89,16 +56,22 @@
     RTS
 .endproc
 
-; _spawn_enemy
-; Initialize an enemy's state, x-coord, and y-coord.
-; Only to be called by spawn_enemy_for_screen, or in a context
-; where next_free is valid.
+
+; spawn_enemies_for_stage
 ;
-;   @depends next_free      being populated with a valid address
-;   @depends get_random     used to initialize x-coord spawn location
+;   @arg spawn_enemy_type: the type of enemy to spawn
+;   @arg spawn_enemy_amount: the amount of enemies to spawn
 ;
-.export _spawn_enemy
-.proc _spawn_enemy
+.BSS
+spawn_count: .byte $00          ; @internal
+spawn_enemy_type: .res 1        ; @external
+spawn_enemy_amount: .res 1      ; @external
+spawn_enemy_x_coord: .res 1     ; @external
+y_offset: .res 1                ; @internal
+.export spawn_enemy_type, spawn_enemy_amount, spawn_enemy_x_coord
+.CODE
+.export spawn_enemies_for_stage
+.proc spawn_enemies_for_stage
     PHP
     PHA
     TXA
@@ -106,34 +79,46 @@
     TYA
     PHA
 
-    LDY next_free                   ; initialize memory index
-    CPY #$ff                        ; sanity check, is this actually free?
-    BEQ @done                       ; if not, get out of here.
-    LDX screen                      ; load screen for offset into enemy type and amount
-    LDA level_1,x                   ; get the enemy type and amount: %0tttAAAA -> t = type, A = amount
-    AND #LEVEL_ENEMY_TYPE           ; get the enemy type
-    LSR                             ; shift to the end ...
-    LSR
-    LSR
-    LSR
-    EOR #STATE_ENEMY_ALIVE          ; mark it as alive
-    STA enemy_state,y               ; store the state
-    JSR get_random                  ; get a random number
-    AND #STATE_ENEMY_DIR            ; try and and it with a direction bit
-    EOR enemy_state,y               ; XOR it with enemy_state
-    STA enemy_state,y               ; store it in enemy_state
-    JSR get_random
-    AND #STATE_ENEMY_ATTR
-    EOR enemy_state,y
-    STA enemy_state,y
+    LDX #$00
+    STX y_offset
+    STX spawn_count
+@loop:
+    LDX spawn_count
+    CPX spawn_enemy_amount
+    BEQ @done
 
-    LDY next_free                   ; reload next_free
-    JSR get_random                  ; get a random value for x-coord
-    STA enemy_x,y                   ; store it at the next_free location
-    LDA #$00                        ; load up $00
-    STA enemy_y,y                   ; store it in the y-coord for next_free
+    JSR get_next_free_enemy
+    LDA next_free_enemy
+    CMP #$ff
+    BEQ @done
+
+    LDA #$00
+    EOR #STATE_ENEMY_ALIVE
+    STA enemy_state,x
+
+    LDA spawn_enemy_x_coord
+    STA enemy_x,x
+
+    LDA y_offset
+    CLC
+    ADC #ENEMY_Y_SPACING
+    STA y_offset
+    STA enemy_y,x
+
+    LDA spawn_enemy_type
+    EOR enemy_state,x
+    STA enemy_state,x
+
+    LDX spawn_count
+    INX
+    STX spawn_count
+    JMP @loop
 
 @done:
+    LDA #$00
+    STA y_offset
+    STA spawn_count
+
     PLA
     TAY
     PLA
@@ -142,6 +127,7 @@
     PLP
     RTS
 .endproc
+
 
 .export draw_enemies
 .proc draw_enemies
@@ -153,27 +139,26 @@
     PHA
 
     LDY #$00
-    STY enemy_offset
+    STY draw_sprite_index
     LDX #$00
+    STX draw_enemy_index
 @loop:
-    LDY enemy_offset
-    CMP #(MAX_ENEMY_POOL_SIZE * 4)
+    LDY draw_sprite_index
+    CPY #SIZE_ENEMY_SPRITE_POOL
     BEQ @done
 
-    LDA enemy_state,x
-    AND #STATE_ENEMY_TYPE
-    TAY
-    LDA tile_size,y
-    CMP #$01
-    BEQ @single
-@multi:
-    ;JSR _draw_enemy_multitile
-    JMP @cont
-@single:
     JSR _draw_enemy_tile
 @cont:
     INX
-    CMP #MAX_ENEMY_POOL_SIZE
+    STX draw_enemy_index
+
+    LDA draw_sprite_index
+    CLC
+    ADC #$04
+    STA draw_sprite_index
+
+    LDX draw_enemy_index
+    CPX #MAX_ENEMY_POOL_SIZE
     BNE @loop
 
 @done:
@@ -186,42 +171,23 @@
     RTS
 .endproc
 
-; .proc _draw_enemy_multitile
-;     LDY #$00
-;     STY enemy_offset
-
-;     LDA enemy_y,x               ; load y-coord
-;     STA ENEMY_SPRITE_Y_COORD,y
-
-;     LDA enemy_state,x           ; load tile
-;     AND #STATE_ENEMY_TYPE       ; get type bits
-;     STX enemy_offset
-;     TAX
-;     LDA tile_index,x
-;     STA ENEMY_SPRITE_TILE,y     ; store tile
-;     LDA enemy_state,x
-
-;     AND #STATE_ENEMY_ATTR
-;     LSR A
-;     LSR A
-;     LSR A
-;     LSR A
-;     LSR A
-;     STA ENEMY_SPRITE_ATTR,y      ; load attrib
-
-;     LDA enemy_x,x
-;     STA ENEMY_SPRITE_X_COORD,y
-
-;     RTS
-; .endproc
 
 ; _draw_enemy_tile
 ; Draws an enemy that takes up a single tile.
-; @arg X    the offset into the enemy pool
-;
-; @no-modify X
+.BSS
+draw_sprite_index: .res 1
+draw_enemy_index: .res 1
+.CODE
 .proc _draw_enemy_tile
-    LDY enemy_offset
+    PHP
+    PHA
+    TXA
+    PHA
+    TYA
+    PHA
+
+    LDY draw_sprite_index
+    LDX draw_enemy_index
 
     LDA enemy_y,x               ; load y-coord
     STA ENEMY_SPRITE_Y_COORD,y
@@ -230,26 +196,85 @@
     AND #STATE_ENEMY_TYPE       ; get the type bits
     TAY                         ; transfer the bits to Y
     LDA tile_index,y            ; load the tile_index at Y
-    LDY enemy_offset            ; load enemy_offset back into Y
+    LDY draw_sprite_index       ; load draw_sprite_index back into Y
     STA ENEMY_SPRITE_TILE,y     ; store tile at offset Y
 
-    LDA enemy_state,x
-    AND #STATE_ENEMY_ATTR
-    LSR A
-    LSR A
-    LSR A
-    LSR A
-    LSR A
+    LDA #$01
     STA ENEMY_SPRITE_ATTR,y      ; load attrib
 
     LDA enemy_x,x
-    STA ENEMY_SPRITE_X_COORD,y
+    STA ENEMY_SPRITE_X_COORD,y   ; load x-coord
 
+    PLA
+    TAY
+    PLA
+    TAX
+    PLA
+    PLP
+    RTS
+.endproc
+
+
+; _update_enemy
+;
+;   @arg update_index - the index of the enemy to update
+;
+.BSS
+update_index: .res 1
+.CODE
+.proc _update_enemy
+    PHP
+    PHA
+    TXA
+    PHA
+    TYA
+    PHA
+
+    LDX update_index
+
+    LDA enemy_state,x
+    AND #STATE_ENEMY_ALIVE
+    BEQ @done
+
+    LDA enemy_x,x
+    CMP #$01
+    BEQ @despawn
+    BCC @despawn
+
+    LDA enemy_x,x
+    CMP #$f0
+    BCS @despawn
+    BEQ @despawn
+
+    LDA enemy_y,x
+    CMP #$dd
+    BCS @despawn
+    BEQ @despawn
+
+    ;LDA #$80
+    ;STA enemy_x,x
+
+    LDA enemy_y,x
     CLC
-    TYA                          ; get memory offset
-    ADC #$04                     ; add offset into next OAM block
-    STA enemy_offset
+    ADC #ENEMY_SPEED
+    STA enemy_y,x
+    JMP @done
 
+@despawn:
+    LDA enemy_state,x
+    EOR #STATE_ENEMY_ALIVE
+    STA enemy_state,x
+    LDA #$ff
+    STA enemy_y,x
+    STA enemy_x,x
+
+@done:
+    PLA
+    TAY
+    PLA
+    TAX
+    PLA
+    PLP
     RTS
 .endproc
 
@@ -265,112 +290,13 @@
     PHA
 
     LDX #$00
-@update_y:
-    LDA enemy_state,x               ; get enemy state
-    AND #STATE_ENEMY_ALIVE          ; check if it's alive
-    BEQ @cont_y                     ; if it's dead, don't update it
-    
-    LDA enemy_y,x                   ; get the enemy y-coord
-    CMP #$dd                        ; have we crossed the despawn boundary?
-    BEQ @despawn_y                  ; then despawn the enemy
-    BCS @despawn_y                  ; if we passed the despawn, ex: y-coord >= despawn, despawn also
-
-    INC enemy_y,x                   ; otherwise, increase the y-coord
-
-@cont_y:
+    STX update_index
+@loop:
+    JSR _update_enemy
     INX
+    STX update_index
     CPX #MAX_ENEMY_POOL_SIZE
-    BNE @update_y
-    JMP @init_x
-@despawn_y:
-    LDA enemy_state,x
-    EOR #STATE_ENEMY_ALIVE
-    STA enemy_state,x
-    LDA #$ff
-    STA enemy_y,x
-    STA enemy_x,x
-    JMP @cont_y
-
-@init_x:
-    LDX #$00
-@update_x:
-    LDA enemy_state,x           ; load enemy state
-    AND #STATE_ENEMY_ALIVE      ; check if we're actually alive
-    BEQ @done_x                 ; we're dead, move on
-
-    LDA enemy_x,x               ; load enemy x-coord
-    CMP #$01                    ; are we past the left boundary?
-    BEQ @despawn_x              ; we're right on it, despawn
-    BCC @despawn_x              ; we're beyond it, despawn
-
-    LDA enemy_x,x               ; load enemy x-coord
-    CMP #$f0                    ; are we past the right boundary?
-    BCS @despawn_x              ; we're beyond it, despawn
-    BEQ @despawn_x              ; we're right on it, despawn
-
-    LDA player_y
-    SEC
-    SBC enemy_y,x
-    CMP #$10
-    BCS @spawn_bullet
-    BEQ @spawn_bullet
-    JMP @comp
-@spawn_bullet:
-    LDA enemy_state,x
-    AND #STATE_ENEMY_FIRE
-    BNE @comp
-    TXA
-    TAY
-    JSR spawn_enemy_bullet
-    LDA enemy_state,x
-    EOR #STATE_ENEMY_FIRE
-    STA enemy_state,x
-
-@comp:
-    LDA player_x                ; load player's x-coord
-    CMP enemy_x,x               ; compare it with the current enemy's x-coord
-    BEQ @flip_dir               ; if it's equal flip directions
-    BMI @comp2                  ; if enemy_x > player_x, recompare
-    JMP @load_dir               ; otherwise, stay the course
-
-@comp2:
-    LDA enemy_x,x               ; load the current enemy's x-coord
-    CMP player_x                ; compare it with the player's x-coord
-    BCC @flip_dir               ; if player_x < enemy_x, flip the direction
-    JMP @load_dir               ; otherwise, stay the course
-
-@flip_dir:
-    LDA enemy_state,x           ; reload the enemy state
-    EOR #STATE_ENEMY_DIR        ; flip direction
-    STA enemy_state,x
-
-@load_dir:
-    LDA enemy_state,x
-    AND #STATE_ENEMY_DIR
-    BEQ @inc_x                  ; go right
-    JMP @dec_x                  ; go left
-
-@landing_pad: JMP @update_x
-
-@inc_x:
-    INC enemy_x,x
-    JMP @done_x
-
-@dec_x:
-    DEC enemy_x,x
-    JMP @done_x
-
-@despawn_x:
-    LDA enemy_state,x
-    EOR #STATE_ENEMY_ALIVE
-    STA enemy_state,x
-    LDA #$ff
-    STA enemy_y,x
-    STA enemy_x,x
-@done_x:
-    INX
-    CPX #MAX_ENEMY_POOL_SIZE
-    BNE @landing_pad
+    BNE @loop
 
     PLA
     TAY
@@ -380,6 +306,7 @@
     PLP
     RTS
 .endproc
+
 
 ; Checks if a pool is still alive.
 ;    @return Y - #$01 if yes else #$00
@@ -415,8 +342,7 @@
 .endproc
 
 .segment "RODATA"
-level_1: 
-    .byte %00100000, %00110000, %00100011, %00000111
+
 tile_index:
     .byte $02, $03, $04, $05, $20
 tile_size:
@@ -437,7 +363,6 @@ enemy_state: .res MAX_ENEMY_POOL_SIZE
 enemy_offset: .res 1
 enemy_tile_index: .res 1
 count: .res 1
-next_free: .res 1
 .exportzp enemy_x, enemy_y, enemy_state
 .importzp player_x, player_y
 .importzp tick, tock

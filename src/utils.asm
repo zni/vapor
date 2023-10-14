@@ -11,10 +11,15 @@
 .proc mod
 @loop:
     LDA left_op
+    CMP right_op
+    BCC @done
+    LDA left_op
+    CMP #00
+    BEQ @done
+    LDA left_op
     SEC
     SBC right_op
-    BEQ @done
-    BMI @invalid
+    BEQ @done       ; if 0, we're done
     STA left_op
     CMP right_op
     BCC @done

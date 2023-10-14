@@ -6,6 +6,9 @@
     RTI
 .endproc
 
+.import init_level
+.import update_level
+
 .import draw_player
 .import update_player
 
@@ -25,6 +28,11 @@
 .import collision_detection_first_round
 .import collision_detection_second_round
 
+.BSS
+last_tock: .res 1
+.export last_tock
+
+.CODE
 .proc nmi_handler
     LDA #$00
     STA OAMADDR
@@ -37,17 +45,16 @@
     LDA tick
     CMP #$ff
     BNE @updates
+    LDA tock            ; load up tock...
+    STA last_tock       ; and save it as last_tock.
     INC tock
 
 @updates:
     JSR update_player
     JSR draw_player
 
-    JSR enemy_liveness_check
-    CPY #$01
-    BEQ @enemy_updates
-    JSR spawn_enemy_for_screen
-@enemy_updates:
+    JSR update_level
+
     JSR update_enemies
     JSR draw_enemies
 
@@ -98,6 +105,12 @@ load_sprite_palettes:
     LDX #$28
     JSR draw_starfield
 
+    ; Initialize last tock.
+    LDA #$00
+    STA last_tock
+
+    JSR init_level
+
 forever:
     JMP forever
 .endproc
@@ -121,7 +134,7 @@ sprite_palettes:
     .byte $0f, $19, $09, $29
 
 
-.segment "ZEROPAGE"
+.ZEROPAGE
 player_x: .res 1
 player_y: .res 1
 player_state: .res 1

@@ -4,3 +4,4 @@ artifacts/*.nes
 artifacts/*.nes.ram.nl
 artifacts/*.o
 src/*.o
+build.sh

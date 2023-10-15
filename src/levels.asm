@@ -151,8 +151,8 @@ level_1:
 level_1_behaviors:
     .byte %00001001, %00000010, %00000001, %00000010
     .byte %00001001, %00001010, %00001001, %00001001
-    .byte %00000000, %00000000, %00000000, %00000000
-    .byte %00000000, %00000000, %00000000, %00000000
+    .byte %00000101, %00000110, %00000101, %00000110
+    .byte %00001010, %00001001, %00001010, %00001001
 ; level_X_behaviors -> %0000UDLR
 ; U = 1 bit: up direction
 ; D = 1 bit: down direction
@@ -161,10 +161,10 @@ level_1_behaviors:
 
 ; the tocks that need to have passed to trigger a stage.
 level_1_tocks:
-    .byte $01, $03, $06, $09
-    .byte $0c, $0f, $12, $15
-    .byte $18, $1b, $1e, $21
-    .byte $24, $27, $2a, $2d
+    .byte $01, $02, $03, $04
+    .byte $08, $09, $0a, $0b
+    .byte $0f, $10, $11, $12
+    .byte $16, $17, $18, $19
 
 spawn_locations:
     .byte $40, $60, $80, $a0, $c0

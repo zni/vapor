@@ -1,8 +1,11 @@
+artifacts/.*
 artifacts/*.cdl
 artifacts/*.fdb
 artifacts/*.dbg
 artifacts/*.nes
 artifacts/*.nes.ram.nl
 artifacts/*.o
+src/.*
 src/*.o
 build.sh
+.*

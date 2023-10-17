@@ -44,36 +44,9 @@
     TYA
     PHA
 
-;;;; get controller input
-    LDA #$01
-    STA CONTROLLER_1
-    LDA #$00
-    STA CONTROLLER_1
-
-    ; initialize pad1
-    LDA #%00000001
-    STA pad1
-
-get_button_states:
-    LDA CONTROLLER_1
-    LSR A            ; Shift the accumulator into the carry flag.
-    ROL pad1         ; Shift everything in pad1,
-                     ; bringing the carry flag into pad1.
-    BCC get_button_states
-;;;; end get input
-
     LDA player_state
     AND #STATE_PLAYER_ALIVE
     BNE death_spiral
-
-    LDA pad1
-    EOR #%11111111
-    AND last_frame_pad1
-    STA released_pad1
-    LDA last_frame_pad1
-    EOR #%11111111
-    AND pad1
-    STA pressed_pad1
 
 ;;;; check button presses
     LDA pad1
@@ -138,8 +111,6 @@ check_a:
 
 
 done_checking:
-    LDA pad1
-    STA last_frame_pad1
     PLA
     TAY
     PLA
@@ -155,9 +126,5 @@ done_checking:
 
 
 .segment "ZEROPAGE"
-pad1: .res 1
-last_frame_pad1: .res 1
-released_pad1: .res 1
-pressed_pad1: .res 1
 .importzp player_x, player_y, player_state
-.exportzp last_frame_pad1
+.importzp pad1, released_pad1, pressed_pad1

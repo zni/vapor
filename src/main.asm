@@ -22,6 +22,7 @@
 .import update_enemy_bullets
 .import draw_enemy_bullets
 
+.import draw_title_screen
 .import draw_starfield
 .import set_scroll_position
 
@@ -30,6 +31,7 @@
 
 .BSS
 last_tock: .res 1
+.import title_screen_high_byte
 .export last_tock
 
 .CODE
@@ -50,23 +52,23 @@ last_tock: .res 1
     INC tock
 
 @updates:
-    JSR update_player
-    JSR draw_player
+    ; JSR update_player
+    ; JSR draw_player
 
-    JSR update_level
+    ; JSR update_level
 
-    JSR update_enemies
-    JSR draw_enemies
+    ; JSR update_enemies
+    ; JSR draw_enemies
 
-    JSR update_player_bullets
-    JSR draw_player_bullets
-    JSR update_enemy_bullets
-    JSR draw_enemy_bullets
+    ; JSR update_player_bullets
+    ; JSR draw_player_bullets
+    ; JSR update_enemy_bullets
+    ; JSR draw_enemy_bullets
 
-    JSR collision_detection_first_round
-    JSR collision_detection_second_round
+    ; JSR collision_detection_first_round
+    ; JSR collision_detection_second_round
 
-    JSR set_scroll_position
+    ; JSR set_scroll_position
 
     RTI
 .endproc
@@ -100,10 +102,14 @@ load_sprite_palettes:
     CPX #$10
     BNE load_sprite_palettes
 
-    LDX #$20
-    JSR draw_starfield
-    LDX #$28
-    JSR draw_starfield
+    ; LDX #$20
+    ; JSR draw_starfield
+    ; LDX #$28
+    ; JSR draw_starfield
+
+    LDA #$20
+    STA title_screen_high_byte
+    JSR draw_title_screen
 
     ; Initialize last tock.
     LDA #$00

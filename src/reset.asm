@@ -23,10 +23,11 @@ clear_oam:
     INX
     BNE clear_oam
 
+    LDA PPUSTATUS
     LDA #%10010000      ; turn on NMIs, sprites use first pattern table
     STA PPUCTRL
     STA ppuctrl_settings
-    LDA #%00011000      ; turn on screen - show bg / sprites
+    LDA #PPU_SHOW_SPRITES    ; turn on screen - show bg / sprites
     STA PPUMASK
 
     LDA #$80
@@ -35,7 +36,7 @@ clear_oam:
     STA player_y
     
     LDA #$00
-    EOR STATE_PLAYER_ALIVE
+    EOR #STATE_PLAYER_ALIVE
     STA player_state
 
     LDA #$00

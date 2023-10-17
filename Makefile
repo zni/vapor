@@ -11,6 +11,7 @@ all:
 	$(CA65_PATH)/ca65 src/random.asm
 	$(CA65_PATH)/ca65 src/utils.asm
 	$(CA65_PATH)/ca65 src/levels.asm
+	$(CA65_PATH)/ca65 src/controller.asm
 	$(CA65_PATH)/ld65 src/reset.o \
 		 src/player.o \
 		 src/enemy.o \
@@ -20,6 +21,7 @@ all:
 		 src/random.o \
 		 src/utils.o \
 		 src/levels.o \
+		 src/controller.o \
 		 src/main.o -C nes.cfg --dbgfile artifacts/vapor.dbg -o artifacts/vapor.nes
 
 clean:

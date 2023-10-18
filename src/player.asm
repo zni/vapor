@@ -44,9 +44,9 @@
     TYA
     PHA
 
-    LDA player_state
-    AND #STATE_PLAYER_ALIVE
-    BNE death_spiral
+    ; LDA player_state
+    ; AND #STATE_PLAYER_ALIVE
+    ; BNE death_spiral
 
 ;;;; check button presses
     LDA pad1

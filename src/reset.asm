@@ -2,6 +2,8 @@
 
 .segment "CODE"
 .import main
+.import title_nmi_handler
+.import change_nmi_handler
 .export reset_handler
 .proc reset_handler
     SEI
@@ -22,6 +24,10 @@ clear_oam:
     INX
     INX
     BNE clear_oam
+
+    LDX #<title_nmi_handler
+    LDY #>title_nmi_handler
+    JSR change_nmi_handler
 
     LDA PPUSTATUS
     LDA #%10010000      ; turn on NMIs, sprites use first pattern table

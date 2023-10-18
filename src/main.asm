@@ -30,48 +30,11 @@
 .import collision_detection_second_round
 
 .BSS
-last_tock: .res 1
 .import title_screen_high_byte
-.export last_tock
+.import nmi_trampoline
 
 .CODE
-.proc nmi_handler
-    LDA #$00
-    STA OAMADDR
-    LDA #$02
-    STA OAMDMA
 
-    ; put together some kind of timing mechanism,
-    ; however bullshit it may be.
-    INC tick
-    LDA tick
-    CMP #$ff
-    BNE @updates
-    LDA tock            ; load up tock...
-    STA last_tock       ; and save it as last_tock.
-    INC tock
-
-@updates:
-    ; JSR update_player
-    ; JSR draw_player
-
-    ; JSR update_level
-
-    ; JSR update_enemies
-    ; JSR draw_enemies
-
-    ; JSR update_player_bullets
-    ; JSR draw_player_bullets
-    ; JSR update_enemy_bullets
-    ; JSR draw_enemy_bullets
-
-    ; JSR collision_detection_first_round
-    ; JSR collision_detection_second_round
-
-    ; JSR set_scroll_position
-
-    RTI
-.endproc
 
 .import reset_handler
 
@@ -111,10 +74,6 @@ load_sprite_palettes:
     STA title_screen_high_byte
     JSR draw_title_screen
 
-    ; Initialize last tock.
-    LDA #$00
-    STA last_tock
-
     JSR init_level
 
 forever:
@@ -122,7 +81,7 @@ forever:
 .endproc
 
 .segment "VECTORS"
-.addr nmi_handler, reset_handler, irq_handler
+.addr nmi_trampoline, reset_handler, irq_handler
 
 .segment "CHR"
 .incbin "graphics.chr"

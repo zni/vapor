@@ -5,11 +5,58 @@ title_screen_high_byte: .byte $00
 title_row_count: .byte $00
 .export title_screen_high_byte
 
+
 .ZEROPAGE
 title_screen_addr: .addr $0000
 
-; 0F 2B 3C 39
+
 .CODE
+
+; @arg X    - high byte of the nametable to write to.
+.export blank_screen
+.proc blank_screen
+    PHP
+    PHA
+    TYA
+    PHA
+
+    LDA #0
+    STA PPUMASK
+
+    LDA PPUSTATUS
+    STX PPUADDR
+    LDA #0
+    STA PPUADDR
+
+    LDX #0
+@init_y:
+    LDY #0
+@loop:
+    LDA #0
+    STA PPUDATA
+    INY
+    CPY #16
+    BNE @loop
+
+    INX
+    CPX #60
+    BNE @init_y
+
+@done:
+    LDA #PPU_SHOW_SPRITES
+    STA PPUMASK
+
+    LDA #0
+    STA PPUSCROLL
+    STA PPUSCROLL
+
+    PLA
+    TAY
+    PLA
+    PHP
+    RTS
+.endproc
+
 .export draw_title_screen
 .proc draw_title_screen
     PHP

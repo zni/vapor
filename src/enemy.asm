@@ -279,6 +279,8 @@ update_index: .res 1
     LDA enemy_state,x
     AND #STATE_ENEMY_FIRE
     BNE @apply_behavior
+    TXA
+    TAY
     JSR spawn_enemy_bullet
     LDA enemy_state,x
     EOR #STATE_ENEMY_FIRE

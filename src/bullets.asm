@@ -201,8 +201,6 @@ enemy_bullet_y_offset: .byte $00
     PHA
     TXA
     PHA
-    TYA
-    PHA
 
     JSR get_next_free_enemy_bullet      ; get next free, store in X
     CPX #$ff                            ; check if nothing is free
@@ -220,8 +218,6 @@ enemy_bullet_y_offset: .byte $00
     STA enemy_bullet_state,x
 
 @done:
-    PLA
-    TAY
     PLA
     TAX
     PLA

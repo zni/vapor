@@ -63,6 +63,7 @@
 
     LDX stage_index
     CPX #LEVEL_STAGES
+    BEQ @done
 
     LDX stage_index
     LDA tock

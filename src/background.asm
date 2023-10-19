@@ -53,7 +53,7 @@ title_screen_addr: .addr $0000
     PLA
     TAY
     PLA
-    PHP
+    PLP
     RTS
 .endproc
 
@@ -150,6 +150,9 @@ title_screen_addr: .addr $0000
 ; draws the starfield background
 ;   @arg X  contains high byte of nametable to write to.
 .proc draw_starfield
+    LDA #0
+    STA PPUMASK
+
     LDA PPUSTATUS
 
     LDY #$00
@@ -209,6 +212,9 @@ title_screen_addr: .addr $0000
     STA PPUADDR
     LDA #%11000000
     STA PPUDATA
+
+    LDA #PPU_SHOW_SPRITES
+    STA PPUMASK
 
     RTS
 .endproc

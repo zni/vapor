@@ -459,14 +459,25 @@ tile_size:
 enemy_x:         .res MAX_ENEMY_POOL_SIZE
 enemy_y:         .res MAX_ENEMY_POOL_SIZE
 enemy_behavior:  .res MAX_ENEMY_POOL_SIZE
+; enemy behavior -> %000TUDLR
+;
+;   T: Behavior Triggered
+;   U: Move Up
+;   D: Move Down
+;   L: Move Left
+;   R: Move Right
+;
+
 enemy_state:     .res MAX_ENEMY_POOL_SIZE
 ; enemy state  -> %fPPLAttt
-;                  ||||||||
-;                  |+ || +-- Type
-;                  || ||____ Alive
-;                  || |_____ Direction (0 - right, 1 - left)
-;                  ||_______ Palette (attribute bits)
-;                  |________ Fired Bullet (0 - false, 1 - true)
+;
+;   t: Type
+;   A: Alive
+;   L: Direction (0 - right, 1 - left)
+;   P: Palette (attribute bits)
+;   f: Fired Bullet (0 - false, 1 - true)
+;
+
 enemy_offset: .res 1
 enemy_tile_index: .res 1
 count: .res 1

@@ -175,7 +175,10 @@
 .segment "ZEROPAGE"
 object_x_w: .res 1
 object_y_h: .res 1
-.importzp enemy_x, enemy_y, enemy_state
 .importzp player_x, player_y, player_state
 .importzp bullet_x, bullet_y, bullet_state
-.importzp enemy_bullet_x, enemy_bullet_y, enemy_bullet_state
+
+
+.BSS
+.import enemy_x, enemy_y, enemy_state
+.import enemy_bullet_x, enemy_bullet_y, enemy_bullet_state

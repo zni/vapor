@@ -333,12 +333,13 @@ enemy_bullet_y_offset: .byte $00
 bullet_x: .res MAX_BULLET_POOL_SIZE
 bullet_y: .res MAX_BULLET_POOL_SIZE
 bullet_state: .res MAX_BULLET_POOL_SIZE
+.importzp player_x, player_y
+.exportzp bullet_x, bullet_y, bullet_state
 
+
+.BSS
 enemy_bullet_x: .res MAX_NME_BULLET_POOL_SIZE
 enemy_bullet_y: .res MAX_NME_BULLET_POOL_SIZE
 enemy_bullet_state: .res MAX_NME_BULLET_POOL_SIZE
-
-.importzp player_x, player_y
-.importzp enemy_x, enemy_y
-.exportzp bullet_x, bullet_y, bullet_state
-.exportzp enemy_bullet_x, enemy_bullet_y, enemy_bullet_state
+.export enemy_bullet_x, enemy_bullet_y, enemy_bullet_state
+.import enemy_x, enemy_y

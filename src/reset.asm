@@ -88,10 +88,12 @@ init_enemy_bullet_state:
 
 .segment "ZEROPAGE"
 .importzp player_x, player_y, player_state
-.importzp enemy_state
 .importzp last_frame_pad1
 .importzp bullet_x, bullet_y, bullet_state
-.importzp enemy_bullet_x, enemy_bullet_y, enemy_bullet_state
 .importzp ppuctrl_settings
 .importzp tick, tock
 .importzp screen
+
+.BSS
+.import enemy_state
+.import enemy_bullet_x, enemy_bullet_y, enemy_bullet_state

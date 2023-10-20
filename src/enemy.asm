@@ -258,7 +258,7 @@ update_index: .res 1
     BEQ @despawn
 
     LDA enemy_y,x
-    CMP #$80
+    CMP #ENEMY_TRIGGER_BEHAVIOR
     BCC @check_trigger
     BCS @apply_trigger
 
@@ -448,14 +448,13 @@ update_index: .res 1
 .endproc
 
 .segment "RODATA"
-
 tile_index:
     .byte $02, $03, $04, $05, $20
 tile_size:
     .byte $01, $01, $01, $01, $04
 
 
-.segment "ZEROPAGE"
+.BSS
 enemy_x:         .res MAX_ENEMY_POOL_SIZE
 enemy_y:         .res MAX_ENEMY_POOL_SIZE
 enemy_behavior:  .res MAX_ENEMY_POOL_SIZE
@@ -477,14 +476,5 @@ enemy_state:     .res MAX_ENEMY_POOL_SIZE
 ;   P: Palette (attribute bits)
 ;   f: Fired Bullet (0 - false, 1 - true)
 ;
-
-enemy_offset: .res 1
-enemy_tile_index: .res 1
-count: .res 1
-.exportzp enemy_x, enemy_y, enemy_state
-.importzp player_x, player_y
-.importzp tick, tock
-.importzp screen
-
-.segment "BSS"
+.export enemy_x, enemy_y, enemy_state
 .import left_op, right_op

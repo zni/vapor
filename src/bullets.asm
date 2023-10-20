@@ -2,6 +2,8 @@
 
 .segment "CODE"
 
+.import get_random
+
 ; Gets the next free bullet in the list.
 ;   @return X   the location of the next free bullet 
 ;               or #$ff if not available
@@ -209,12 +211,32 @@ enemy_bullet_y_offset: .byte $00
     LDA enemy_x,y
     STA enemy_bullet_x,x
 
+    LDA player_x
+    STA enemy_bullet_target_x,x
+    LDA player_y
+    STA enemy_bullet_target_y,x
+
     LDA enemy_y,y
     CLC
     ADC #$08
     STA enemy_bullet_y,x
 
     LDA #STATE_BULLET_ALIVE
+    STA enemy_bullet_state,x
+
+    LDA player_x
+    SEC
+    SBC enemy_bullet_x,x
+    BMI @go_left
+    JMP @go_right
+@go_left:
+    LDA enemy_bullet_state,x
+    EOR #STATE_BULLET_DIR_L
+    STA enemy_bullet_state,x
+    JMP @done
+@go_right:
+    LDA enemy_bullet_state,x
+    EOR #STATE_BULLET_DIR_R
     STA enemy_bullet_state,x
 
 @done:
@@ -225,6 +247,11 @@ enemy_bullet_y_offset: .byte $00
     RTS
 .endproc
 
+.BSS
+bullet_speed_modifier: .res 1
+.import left_op, right_op
+.CODE
+.import mod
 .export update_enemy_bullets
 .proc update_enemy_bullets
     PHP
@@ -239,26 +266,33 @@ enemy_bullet_y_offset: .byte $00
     LDA enemy_bullet_state,x
     AND #STATE_BULLET_ALIVE
     BEQ @continue
+
     LDA enemy_bullet_y,x
     CMP #$f0                    ; if we hit the bottom, despawn
     BCS @despawn_bullet
     BEQ @despawn_bullet
 
-    LDA enemy_bullet_y,x
-    CLC
-    ADC #ENEMY_BULLET_SPEED           ; move the bullet
-    STA enemy_bullet_y,x              ; store y-coord
+    LDA enemy_bullet_x,x
+    CMP #$01                    ; if we go too far left, despawn
+    BEQ @despawn_bullet
+    BCC @despawn_bullet
 
     LDA enemy_bullet_x,x
-    SEC
-    SBC player_x
-    BMI @inc_x
-    BCC @dec_x
-@inc_x:
-    INC enemy_bullet_x,x
-    JMP @continue
-@dec_x:
-    DEC enemy_bullet_x,x
+    CMP #$f0                    ; if we go too far right, despawn
+    BCS @despawn_bullet
+    BEQ @despawn_bullet
+
+    JSR get_random
+    LSR
+    STA left_op
+    LDA #ENEMY_BULLET_SPEED
+    STA right_op
+    JSR mod
+    STA bullet_speed_modifier
+
+    JSR _update_enemy_bullet_y
+    JSR _update_enemy_bullet_x
+
 @continue:
     INX
     CPX #MAX_NME_BULLET_POOL_SIZE
@@ -280,6 +314,73 @@ enemy_bullet_y_offset: .byte $00
     TAX
     PLA
     PLP
+    RTS
+.endproc
+
+.proc _update_enemy_bullet_y
+    LDA enemy_bullet_y,x
+    CLC
+    ADC #ENEMY_BULLET_SPEED
+    CMP enemy_bullet_target_y
+    BEQ @store_y
+    ADC bullet_speed_modifier         ; move the bullet
+@store_y:
+    STA enemy_bullet_y,x              ; store y-coord
+
+    RTS
+.endproc
+
+.proc _update_enemy_bullet_x
+    LDA enemy_bullet_state,x
+    AND STATE_BULLET_DIR_L
+    BNE @comp_x_left
+    JMP @comp_x_right
+
+@comp_x_right:
+    LDA enemy_bullet_x,x
+    CMP enemy_bullet_target_x,x
+    BEQ @done
+    BCC @inc_x
+    BCS @dec_x
+    JMP @short_right_inc
+
+@comp_x_left:
+    LDA enemy_bullet_x,x
+    CMP enemy_bullet_target_x,x
+    BCC @dec_x
+    BCS @inc_x
+    JMP @short_left_dec
+
+@inc_x:
+    LDA enemy_bullet_x,x
+    CLC
+    ADC #ENEMY_BULLET_SPEED
+    CMP enemy_bullet_target_x,x
+    BEQ @store_x
+    ADC bullet_speed_modifier
+    JMP @store_x
+
+@short_right_inc:
+    INC enemy_bullet_x,x
+    JMP @done
+
+@dec_x:
+    LDA enemy_bullet_x,x
+    SEC
+    SBC #ENEMY_BULLET_SPEED
+    CMP enemy_bullet_x,x
+    BEQ @store_x
+    SBC bullet_speed_modifier
+    JMP @store_x
+
+@short_left_dec:
+    DEC enemy_bullet_x,x
+    JMP @done
+
+@store_x:
+    STA enemy_bullet_x,x
+
+@done:
     RTS
 .endproc
 
@@ -341,5 +442,7 @@ bullet_state: .res MAX_BULLET_POOL_SIZE
 enemy_bullet_x: .res MAX_NME_BULLET_POOL_SIZE
 enemy_bullet_y: .res MAX_NME_BULLET_POOL_SIZE
 enemy_bullet_state: .res MAX_NME_BULLET_POOL_SIZE
+enemy_bullet_target_x: .res MAX_NME_BULLET_POOL_SIZE
+enemy_bullet_target_y: .res MAX_NME_BULLET_POOL_SIZE
 .export enemy_bullet_x, enemy_bullet_y, enemy_bullet_state
 .import enemy_x, enemy_y

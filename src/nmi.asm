@@ -93,8 +93,7 @@ nmi_trampoline: .res 3
 .import draw_starfield
 .import set_scroll_position
 
-.import collision_detection_first_round
-.import collision_detection_second_round
+.import collision_detection
 
 .export game_nmi_handler
 .proc game_nmi_handler
@@ -134,8 +133,7 @@ nmi_trampoline: .res 3
     JSR update_enemy_bullets
     JSR draw_enemy_bullets
 
-    JSR collision_detection_first_round
-    JSR collision_detection_second_round
+    JSR collision_detection
 
     JSR set_scroll_position
 

@@ -2,7 +2,6 @@
 
 ; collision_detection_first_round
 ; Perform AABB collision detection on player bullets and enemies.
-.export collision_detection_first_round
 .proc collision_detection_first_round
     PHP
     PHA
@@ -91,7 +90,6 @@
     RTS
 .endproc
 
-.export collision_detection_second_round
 .proc collision_detection_second_round
     PHP
     PHA
@@ -163,6 +161,27 @@
 
 
 @done:
+    PLA
+    TAY
+    PLA
+    TAX
+    PLA
+    PLP
+    RTS
+.endproc
+
+.export collision_detection
+.proc collision_detection
+    PHP
+    PHA
+    TXA
+    PHA
+    TYA
+    PHA
+
+    JSR collision_detection_first_round
+    JSR collision_detection_second_round
+
     PLA
     TAY
     PLA
